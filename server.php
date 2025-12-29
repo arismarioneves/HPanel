@@ -478,6 +478,15 @@
                                     </svg>
                                 </button>
                             <?php endif; ?>
+                            <button class="btn btn-secondary btn-icon btn-databases"
+                                onclick="toggleDatabases(this, '<?= htmlspecialchars($site['username']) ?>', '<?= htmlspecialchars($site['domain']) ?>', <?= $orderId ?>)"
+                                title="Bancos de Dados">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                </svg>
+                            </button>
                             <button class="btn btn-secondary btn-icon btn-files"
                                 onclick="openFileBrowser('<?= htmlspecialchars($site['username']) ?>', '<?= htmlspecialchars($site['domain']) ?>', <?= $orderId ?>)"
                                 title="Gerenciador de Arquivos">
@@ -495,6 +504,21 @@
                                     <line x1="10" y1="14" x2="21" y2="3"></line>
                                 </svg>
                             </a>
+                        </div>
+                    </div>
+
+                    <!-- Databases Container -->
+                    <div class="databases-container" style="display: none;" data-loaded="false">
+                        <div class="databases-loading">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                            Carregando bancos de dados...
+                        </div>
+                        <div class="databases-list"></div>
+                        <div class="databases-empty" style="display: none;">
+                            <span>Nenhum banco de dados encontrado</span>
                         </div>
                     </div>
 
@@ -584,6 +608,99 @@
                 button.disabled = false;
             }
         }
+
+        async function toggleDatabases(button, username, domain, orderId) {
+            const group = button.closest('.website-group');
+            const container = group.querySelector('.databases-container');
+            const loading = container.querySelector('.databases-loading');
+            const list = container.querySelector('.databases-list');
+            const empty = container.querySelector('.databases-empty');
+
+            // Toggle visibility
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+
+                // Load databases if not already loaded
+                if (container.dataset.loaded === 'false') {
+                    loading.style.display = 'flex';
+                    list.innerHTML = '';
+                    empty.style.display = 'none';
+
+                    try {
+                        const response = await fetch(`api/databases.php?username=${encodeURIComponent(username)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
+                        const data = await response.json();
+
+                        loading.style.display = 'none';
+                        container.dataset.loaded = 'true';
+
+                        if (data.success && data.databases && data.databases.length > 0) {
+                            data.databases.forEach(db => {
+                                const dbItem = document.createElement('div');
+                                dbItem.className = 'database-item';
+                                const sizeMb = db.diskUsageMb || 0;
+                                const sizeDisplay = sizeMb >= 1024 ? (sizeMb / 1024).toFixed(1) + ' GB' : sizeMb + ' MB';
+                                dbItem.innerHTML = `
+                                    <div class="database-info">
+                                        <span class="database-name">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                            </svg>
+                                            ${db.name}
+                                        </span>
+                                        <span class="database-meta">Usuário: ${db.user || 'N/A'} • Tamanho: ${sizeDisplay}</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-icon btn-phpmyadmin"
+                                        onclick="openPhpMyAdmin('${username}', '${db.name}', '${domain}', ${orderId}, this)"
+                                        title="Abrir phpMyAdmin">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                            <polyline points="15 3 21 3 21 9"></polyline>
+                                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                                        </svg>
+                                    </button>
+                                `;
+                                list.appendChild(dbItem);
+                            });
+                        } else {
+                            empty.style.display = 'block';
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        loading.style.display = 'none';
+                        empty.innerHTML = '<span style="color: var(--danger);">Erro ao carregar bancos</span>';
+                        empty.style.display = 'block';
+                    }
+                }
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        async function openPhpMyAdmin(username, dbName, domain, orderId, button) {
+            const originalContent = button.innerHTML;
+
+            button.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(`api/phpmyadmin.php?username=${encodeURIComponent(username)}&dbName=${encodeURIComponent(dbName)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
+                const data = await response.json();
+
+                if (data.success && data.link) {
+                    window.open(data.link, '_blank');
+                } else {
+                    alert('Erro ao obter link do phpMyAdmin');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao conectar com o servidor');
+            } finally {
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            }
+        }
     </script>
 
     <style>
@@ -609,6 +726,82 @@
         .btn-files:hover {
             background: rgba(139, 92, 246, 0.25);
             border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-databases {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-databases:hover {
+            background: rgba(34, 197, 94, 0.25);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .databases-container {
+            margin-left: var(--spacing-lg);
+            padding-left: var(--spacing-md);
+            border-left: 2px solid rgba(34, 197, 94, 0.3);
+            margin-top: var(--spacing-xs);
+        }
+
+        .databases-loading {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .database-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(34, 197, 94, 0.05);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .database-item:hover {
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .database-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .database-name {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .database-name svg {
+            color: var(--success);
+        }
+
+        .database-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: 20px;
+        }
+
+        .databases-empty {
+            padding: var(--spacing-sm);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .btn-phpmyadmin {
+            padding: 4px 8px;
         }
     </style>
 </body>

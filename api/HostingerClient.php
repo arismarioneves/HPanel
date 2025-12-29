@@ -127,4 +127,50 @@ class HostingerClient
         $result = $this->request($endpoint, $headers);
         return $result['data']['link'] ?? null;
     }
+
+    /**
+     * Get databases for a specific domain
+     * @param string $username Account username
+     * @param string $domain Domain name
+     * @param int $orderId Order ID
+     * @return array|null Databases list or null on error
+     */
+    public function getDatabases(string $username, string $domain, int $orderId): ?array
+    {
+        $endpoint = "/api/wh-api/api/hapi/v1/accounts/{$username}/databases?page=1&perPage=100&onlyAssigned=0&vhost={$domain}&gaid={$this->gaid}";
+        $headers = [
+            "x-hpanel-order-id: {$orderId}",
+            "x-hpanel-username: {$username}",
+            "x-hpanel-domain: {$domain}",
+        ];
+        $result = $this->request($endpoint, $headers);
+
+        // Response can have different structures - try common paths
+        if ($result === null) {
+            return null;
+        }
+
+        // Response structure: data.resources
+        return $result['data']['resources'] ?? [];
+    }
+
+    /**
+     * Get phpMyAdmin link for a specific database
+     * @param string $username Account username
+     * @param string $dbName Database name
+     * @param string $domain Domain name
+     * @param int $orderId Order ID
+     * @return string|null phpMyAdmin URL or null on error
+     */
+    public function getPhpMyAdminLink(string $username, string $dbName, string $domain, int $orderId): ?string
+    {
+        $endpoint = "/api/wh-api/api/hapi/v1/accounts/{$username}/databases/{$dbName}/phpmyadmin-link?gaid={$this->gaid}";
+        $headers = [
+            "x-hpanel-order-id: {$orderId}",
+            "x-hpanel-username: {$username}",
+            "x-hpanel-domain: {$domain}",
+        ];
+        $result = $this->request($endpoint, $headers);
+        return $result['data']['link'] ?? null;
+    }
 }
