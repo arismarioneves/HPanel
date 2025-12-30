@@ -40,6 +40,7 @@
 
         $message = '';
         $messageType = '';
+        $tokenGenerated = false;
 
         // Handle form submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -48,6 +49,15 @@
 
             // Extract cookies from cURL command if needed
             $cookies = extractCookies($cookies);
+
+            // Check if cookies already have JWT, if not try to generate one
+            if (!hasJwtToken($cookies)) {
+                $tokenData = generateJwtToken($cookies, $gaid);
+                if ($tokenData && !empty($tokenData['token'])) {
+                    $cookies = addJwtToCookies($cookies, $tokenData['token']);
+                    $tokenGenerated = true;
+                }
+            }
 
             $config = [
                 'cookies' => $cookies,
@@ -58,7 +68,11 @@
                 // Test connection
                 $client = new HostingerClient();
                 if ($client->testConnection()) {
-                    $message = 'Configurações salvas com sucesso! Conexão verificada.';
+                    if ($tokenGenerated) {
+                        $message = 'Configurações salvas! Token JWT gerado automaticamente. Conexão verificada.';
+                    } else {
+                        $message = 'Configurações salvas com sucesso! Conexão verificada.';
+                    }
                     $messageType = 'success';
                 } else {
                     $message = 'Configurações salvas, mas a conexão falhou. Verifique se os cookies estão corretos.';
@@ -79,14 +93,6 @@
             $isConnected = $client->testConnection();
         }
         ?>
-
-        <a href="index.php" class="back-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Voltar para Dashboard
-        </a>
 
         <div class="page-title">
             <h1>Configurações</h1>
@@ -116,36 +122,70 @@
             </div>
         <?php endif; ?>
 
+        <?php
+        // Calculate real token expiration from JWT payload
+        $hasJwt = hasJwtToken($config['cookies'] ?? '');
+        $jwtMinutesLeft = null;
+        $tokenExpired = false;
+        $tokenWarning = false;
+
+        if ($hasJwt && preg_match('/jwt=([^;]+)/', $config['cookies'] ?? '', $matches)) {
+            $parts = explode('.', $matches[1]);
+            if (count($parts) === 3) {
+                $payload = json_decode(base64_decode($parts[1]), true);
+                if (isset($payload['exp'])) {
+                    $jwtMinutesLeft = max(0, floor(($payload['exp'] - time()) / 60));
+                    $tokenExpired = $payload['exp'] < time();
+                    $tokenWarning = $jwtMinutesLeft < 15 && !$tokenExpired;
+                }
+            }
+        }
+        ?>
+
         <div class="status-indicator <?= $isConnected ? 'connected' : 'disconnected' ?>">
             <span class="status-dot"></span>
             <strong><?= $isConnected ? 'Conectado' : 'Desconectado' ?></strong>
             <?php if ($config['lastUpdated']): ?>
                 <span style="color: var(--text-muted); margin-left: auto;">
-                    Última atualização: <?= htmlspecialchars($config['lastUpdated']) ?>
+                    Cookies atualizados: <?= htmlspecialchars($config['lastUpdated']) ?>
                 </span>
             <?php endif; ?>
         </div>
 
+        <?php if ($hasJwt && $jwtMinutesLeft !== null): ?>
+            <div class="token-status <?= $tokenExpired ? 'expired' : ($tokenWarning ? 'warning' : 'valid') ?>">
+                <div class="token-info">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>
+                        <?php if ($tokenExpired): ?>
+                            <strong style="color: var(--danger);">Token EXPIRADO</strong> — Atualize os cookies
+                        <?php elseif ($tokenWarning): ?>
+                            Token expira em <strong style="color: var(--warning);"><?= $jwtMinutesLeft ?> min</strong> — Atualize em breve
+                        <?php else: ?>
+                            Token válido por <strong style="color: var(--success);"><?= $jwtMinutesLeft ?> min</strong>
+                        <?php endif; ?>
+                    </span>
+                </div>
+                <?php if ($tokenExpired || $tokenWarning): ?>
+                    <a href="https://hpanel.hostinger.com" target="_blank" class="btn btn-secondary btn-sm">
+                        Abrir hPanel ↗
+                    </a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
         <form method="post" action="" class="settings-form">
             <div class="form-group">
                 <label class="form-label">Cookies de Autenticação</label>
-                <p class="form-hint">
-                    Cole aqui os cookies copiados do navegador. Você pode colar o comando cURL completo ou apenas a string de cookies.
-                    <br><br>
-                    <strong>Como obter:</strong>
-                <ol style="margin-top: 10px; padding-left: 20px; color: var(--text-secondary);">
-                    <li>Acesse <a href="https://hpanel.hostinger.com" target="_blank" style="color: var(--primary-light);">hpanel.hostinger.com</a> e faça login</li>
-                    <li>Abra o DevTools (F12) → Aba Network</li>
-                    <li>Clique em qualquer requisição</li>
-                    <li>Clique com botão direito → Copy → Copy as cURL</li>
-                    <li>Cole aqui</li>
-                </ol>
-                </p>
+                <p class="form-hint">Cole aqui os cookies copiados do navegador. Você pode colar o comando cURL completo ou apenas a string de cookies.</p>
                 <textarea
                     name="cookies"
                     class="form-textarea"
-                    placeholder="Cole o comando cURL ou os cookies aqui..."
-                    style="min-height: 300px;"><?= htmlspecialchars($config['cookies'] ?? '') ?></textarea>
+                    placeholder="Cole o comando cURL (bash) completo aqui...&#10;&#10;Exemplo:&#10;curl 'https://hpanel.hostinger.com/...' \&#10;  -H 'accept: ...' \&#10;  -b 'language=pt_BR; jwt=eyJ...; ...'"
+                    style="min-height: 200px;"><?= htmlspecialchars($config['cookies'] ?? '') ?></textarea>
             </div>
 
             <div class="form-group">
@@ -168,6 +208,56 @@
             </button>
         </form>
     </div>
+
+    <style>
+        .token-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .token-status.valid {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .token-status.warning {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .token-status.expired {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            color: var(--text-secondary);
+        }
+
+        .token-status.valid .token-info svg {
+            color: var(--success);
+        }
+
+        .token-status.warning .token-info svg {
+            color: var(--warning);
+        }
+
+        .token-status.expired .token-info svg {
+            color: var(--danger);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+    </style>
 </body>
 
 </html>
