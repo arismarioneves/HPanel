@@ -173,4 +173,98 @@ class HostingerClient
         $result = $this->request($endpoint, $headers);
         return $result['data']['link'] ?? null;
     }
+
+    /**
+     * Make a PATCH request to the Hostinger API
+     * @param string $endpoint API endpoint
+     * @param array $data Request body data
+     * @param array $headers Additional headers
+     * @return array|null Response data or null on error
+     */
+    private function requestPatch(string $endpoint, array $data, array $headers = []): ?array
+    {
+        $url = $this->baseUrl . $endpoint;
+
+        $defaultHeaders = [
+            'accept: application/json;charset=utf-8',
+            'accept-language: pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+            'content-type: application/json',
+            'referer: https://hpanel.hostinger.com/',
+            'origin: https://hpanel.hostinger.com',
+            'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+            'sec-fetch-dest: empty',
+            'sec-fetch-mode: cors',
+            'sec-fetch-site: same-origin',
+        ];
+
+        $allHeaders = array_merge($defaultHeaders, $headers);
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'PATCH',
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => $allHeaders,
+            CURLOPT_COOKIE => $this->cookies,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            error_log("Hostinger API Error: $error");
+            return null;
+        }
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            error_log("Hostinger API HTTP Error: $httpCode");
+            return null;
+        }
+
+        return json_decode($response, true);
+    }
+
+    /**
+     * Get PHP version info for a domain
+     * @param string $username Account username
+     * @param string $domain Domain name
+     * @param int $orderId Order ID
+     * @return array|null PHP version data or null on error
+     */
+    public function getPhpVersion(string $username, string $domain, int $orderId): ?array
+    {
+        $endpoint = "/api/wh-api/api/hapi/v1/accounts/{$username}/vhosts/{$domain}/php/version?gaid={$this->gaid}";
+        $headers = [
+            "x-hpanel-order-id: {$orderId}",
+            "x-hpanel-username: {$username}",
+            "x-hpanel-domain: {$domain}",
+        ];
+        $result = $this->request($endpoint, $headers);
+        return $result['data'] ?? null;
+    }
+
+    /**
+     * Set PHP version for a domain
+     * @param string $username Account username
+     * @param string $domain Domain name
+     * @param int $orderId Order ID
+     * @param string $version PHP version to set (e.g., "8.2")
+     * @return bool Success status
+     */
+    public function setPhpVersion(string $username, string $domain, int $orderId, string $version): bool
+    {
+        $endpoint = "/api/wh-api/api/hapi/v1/accounts/{$username}/vhosts/{$domain}/php/version?gaid={$this->gaid}";
+        $headers = [
+            "x-hpanel-order-id: {$orderId}",
+            "x-hpanel-username: {$username}",
+            "x-hpanel-domain: {$domain}",
+        ];
+        $result = $this->requestPatch($endpoint, ['phpVersion' => $version], $headers);
+        return $result !== null;
+    }
 }

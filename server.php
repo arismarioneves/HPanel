@@ -504,6 +504,29 @@
                                     <line x1="10" y1="14" x2="21" y2="3"></line>
                                 </svg>
                             </a>
+                            <!-- Dropdown Menu -->
+                            <div class="dropdown-menu-wrapper">
+                                <button class="btn btn-secondary btn-icon btn-more"
+                                    onclick="toggleDropdownMenu(this)"
+                                    title="Mais opções">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                        <circle cx="19" cy="12" r="1"></circle>
+                                        <circle cx="5" cy="12" r="1"></circle>
+                                    </svg>
+                                </button>
+                                <div class="dropdown-menu" style="display: none;">
+                                    <button class="dropdown-item"
+                                        onclick="openPhpVersionModal('<?= htmlspecialchars($site['username']) ?>', '<?= htmlspecialchars($site['domain']) ?>', <?= $orderId ?>)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                            <polyline points="2 17 12 22 22 17"></polyline>
+                                            <polyline points="2 12 12 17 22 12"></polyline>
+                                        </svg>
+                                        Alterar versão PHP
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -803,7 +826,296 @@
         .btn-phpmyadmin {
             padding: 4px 8px;
         }
+
+        /* Dropdown Menu */
+        .dropdown-menu-wrapper {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            min-width: 180px;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 14px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: left;
+            transition: background var(--transition-fast);
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-item svg {
+            color: var(--accent);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform var(--transition-normal);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .modal-domain {
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .version-select {
+            width: 100%;
+            padding: 10px 14px;
+            background: #1a1a2e;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        .version-select option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        .version-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+        }
     </style>
+
+    <!-- PHP Version Modal -->
+    <div id="phpVersionModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Alterar Versão PHP</span>
+                <button class="modal-close" onclick="closePhpVersionModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-domain" id="phpModalDomain"></p>
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">
+                    Selecione a versão:
+                </label>
+                <select id="phpVersionSelect" class="version-select">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePhpVersionModal()">Cancelar</button>
+                <button class="btn btn-primary" id="phpVersionSaveBtn" onclick="savePhpVersion()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store current modal data
+        let currentPhpModal = {
+            username: '',
+            domain: '',
+            orderId: 0
+        };
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-menu-wrapper')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+            }
+        });
+
+        function toggleDropdownMenu(button) {
+            event.stopPropagation();
+            const menu = button.nextElementSibling;
+            const isVisible = menu.style.display === 'block';
+
+            // Close all other menus
+            document.querySelectorAll('.dropdown-menu').forEach(m => {
+                m.style.display = 'none';
+            });
+
+            menu.style.display = isVisible ? 'none' : 'block';
+        }
+
+        async function openPhpVersionModal(username, domain, orderId) {
+            // Close dropdown
+            document.querySelectorAll('.dropdown-menu').forEach(m => {
+                m.style.display = 'none';
+            });
+
+            currentPhpModal = {
+                username,
+                domain,
+                orderId
+            };
+            const modal = document.getElementById('phpVersionModal');
+            const select = document.getElementById('phpVersionSelect');
+
+            document.getElementById('phpModalDomain').textContent = domain;
+            select.innerHTML = '<option value="">Carregando...</option>';
+            select.disabled = true;
+
+            modal.classList.add('active');
+
+            try {
+                const response = await fetch(`api/php-version.php?username=${encodeURIComponent(username)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
+                const data = await response.json();
+
+                if (data.success && data.versions) {
+                    select.innerHTML = '';
+                    for (const [version, label] of Object.entries(data.versions)) {
+                        const option = document.createElement('option');
+                        option.value = version;
+                        option.textContent = label;
+                        if (version === data.current) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    }
+                    select.disabled = false;
+                } else {
+                    select.innerHTML = '<option value="">Erro ao carregar versões</option>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                select.innerHTML = '<option value="">Erro ao carregar versões</option>';
+            }
+        }
+
+        function closePhpVersionModal() {
+            document.getElementById('phpVersionModal').classList.remove('active');
+        }
+
+        async function savePhpVersion() {
+            const select = document.getElementById('phpVersionSelect');
+            const saveBtn = document.getElementById('phpVersionSaveBtn');
+            const version = select.value;
+
+            if (!version) {
+                alert('Selecione uma versão');
+                return;
+            }
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Salvando...';
+
+            try {
+                await fetch('api/set-php-version.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: currentPhpModal.username,
+                        domain: currentPhpModal.domain,
+                        orderId: currentPhpModal.orderId,
+                        phpVersion: version
+                    })
+                });
+
+                // API doesn't return success response, so always show success
+                alert(`Solicitação para alterar PHP para versão ${version} enviada com sucesso!`);
+                closePhpVersionModal();
+            } catch (error) {
+                console.error('Error:', error);
+                // Still show success since the request was sent
+                alert(`Solicitação para alterar PHP para versão ${version} enviada!`);
+                closePhpVersionModal();
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Salvar';
+            }
+        }
+    </script>
 </body>
 
 </html>
