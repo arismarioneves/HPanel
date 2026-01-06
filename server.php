@@ -7,6 +7,7 @@
     <title>Detalhes do Servidor - Hostinger Dashboard</title>
     <link rel="stylesheet" href="assets/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="assets/config.js"></script>
 </head>
 
 <body>
@@ -43,10 +44,8 @@
             exit;
         }
 
-        if (!isConfigured()) {
-            header('Location: settings.php');
-            exit;
-        }
+        // Note: Configuration check is now done client-side via JavaScript
+        // The HostingerClient will read cookies from HTTP headers sent by JavaScript
 
         $client = new HostingerClient();
         $websitesData = $client->getWebsites();
@@ -613,7 +612,7 @@
             button.disabled = true;
 
             try {
-                const response = await fetch(`api/file-browser.php?username=${encodeURIComponent(username)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
+                const response = await HostingerConfig.fetch(`api/file-browser.php?username=${encodeURIComponent(username)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
                 const data = await response.json();
 
                 if (data.success && data.link) {
@@ -648,7 +647,7 @@
                     empty.style.display = 'none';
 
                     try {
-                        const response = await fetch(`api/databases.php?username=${encodeURIComponent(username)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
+                        const response = await HostingerConfig.fetch(`api/databases.php?username=${encodeURIComponent(username)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
                         const data = await response.json();
 
                         loading.style.display = 'none';
@@ -706,7 +705,7 @@
             button.disabled = true;
 
             try {
-                const response = await fetch(`api/phpmyadmin.php?username=${encodeURIComponent(username)}&dbName=${encodeURIComponent(dbName)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
+                const response = await HostingerConfig.fetch(`api/phpmyadmin.php?username=${encodeURIComponent(username)}&dbName=${encodeURIComponent(dbName)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
                 const data = await response.json();
 
                 if (data.success && data.link) {
@@ -1045,7 +1044,7 @@
             modal.classList.add('active');
 
             try {
-                const response = await fetch(`api/php-version.php?username=${encodeURIComponent(username)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
+                const response = await HostingerConfig.fetch(`api/php-version.php?username=${encodeURIComponent(username)}&domain=${encodeURIComponent(domain)}&orderId=${orderId}`);
                 const data = await response.json();
 
                 if (data.success && data.versions) {
@@ -1087,11 +1086,8 @@
             saveBtn.textContent = 'Salvando...';
 
             try {
-                await fetch('api/set-php-version.php', {
+                await HostingerConfig.fetch('api/set-php-version.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         username: currentPhpModal.username,
                         domain: currentPhpModal.domain,

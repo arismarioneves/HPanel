@@ -2,41 +2,123 @@
 
 /**
  * Configuration Management
- * Handles reading and writing of config.json
+ * Handles reading and writing of session files in cookies/ folder
+ * Each user has a unique session file identified by a hash stored in localStorage
  */
 
-define('CONFIG_FILE', __DIR__ . '/../config.json');
+define('COOKIES_DIR', __DIR__ . '/../cookies/');
 
 /**
- * Get the current configuration
+ * Get the session hash from HTTP headers or cookie
+ * Headers used for AJAX, cookie used for direct page navigation
+ * @return string|null Session hash or null if not provided
+ */
+function getSessionHash(): ?string
+{
+    // First check header (AJAX requests)
+    if (!empty($_SERVER['HTTP_X_SESSION_HASH'])) {
+        return $_SERVER['HTTP_X_SESSION_HASH'];
+    }
+
+    // Fallback to cookie (direct page navigation)
+    return $_COOKIE['hostinger_session'] ?? null;
+}
+
+/**
+ * Get the session file path for a given hash
+ * @param string $hash Session hash
+ * @return string Full path to session file
+ */
+function getSessionFilePath(string $hash): string
+{
+    // Sanitize hash to prevent directory traversal
+    $safeHash = preg_replace('/[^a-zA-Z0-9]/', '', $hash);
+    return COOKIES_DIR . $safeHash . '.json';
+}
+
+/**
+ * Get configuration from session file
+ * @param string|null $hash Session hash (reads from header if null)
  * @return array Configuration data
  */
-function getConfig(): array
+function getConfigFromSession(?string $hash = null): array
 {
-    $content = file_get_contents(CONFIG_FILE);
-    return json_decode($content, true) ?? [];
+    $hash = $hash ?? getSessionHash();
+
+    if (!$hash) {
+        return ['cookies' => '', 'gaid' => ''];
+    }
+
+    $filePath = getSessionFilePath($hash);
+
+    if (!file_exists($filePath)) {
+        return ['cookies' => '', 'gaid' => ''];
+    }
+
+    $content = file_get_contents($filePath);
+    return json_decode($content, true) ?? ['cookies' => '', 'gaid' => ''];
 }
 
 /**
- * Save configuration data
- * @param array $data Configuration data to save
- * @return bool Success status
+ * Save configuration to session file
+ * @param array $data Configuration data (cookies, gaid)
+ * @param string|null $hash Session hash (reads from header if null)
+ * @return array Result with success status and hash
  */
-function saveConfig(array $data): bool
+function saveConfigToSession(array $data, ?string $hash = null): array
 {
+    // Generate new hash if not provided
+    if (!$hash) {
+        $hash = bin2hex(random_bytes(16)); // 32 character hex string
+    }
+
+    $filePath = getSessionFilePath($hash);
+
     $data['lastUpdated'] = date('Y-m-d H:i:s');
     $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    return file_put_contents(CONFIG_FILE, $json) !== false;
+
+    $success = file_put_contents($filePath, $json) !== false;
+
+    return [
+        'success' => $success,
+        'hash' => $hash
+    ];
 }
 
 /**
- * Check if cookies are configured
- * @return bool True if cookies exist and are not empty
+ * Check if session is configured
+ * @param string|null $hash Session hash
+ * @return bool True if cookies exist
  */
-function isConfigured(): bool
+function isSessionConfigured(?string $hash = null): bool
 {
-    $config = getConfig();
+    $config = getConfigFromSession($hash);
     return !empty($config['cookies']);
+}
+
+/**
+ * Delete session file
+ * @param string $hash Session hash
+ * @return bool Success status
+ */
+function deleteSession(string $hash): bool
+{
+    $filePath = getSessionFilePath($hash);
+
+    if (file_exists($filePath)) {
+        return unlink($filePath);
+    }
+
+    return true;
+}
+
+/**
+ * Legacy function for HostingerClient compatibility
+ * Reads config from session using header hash
+ */
+function getConfigFromHeaders(): array
+{
+    return getConfigFromSession();
 }
 
 /**
@@ -70,78 +152,4 @@ function extractCookies(string $input): string
 function hasJwtToken(string $cookies): bool
 {
     return strpos($cookies, 'jwt=') !== false;
-}
-
-/**
- * Generate a new JWT token using the token generation endpoint
- * This works even with cookies copied via bookmarklet (without HttpOnly jwt)
- * @param string $cookies Cookie string
- * @param string $gaid Google Analytics ID
- * @return array|null Token data with 'token' and 'expires_at', or null on failure
- */
-function generateJwtToken(string $cookies, string $gaid): ?array
-{
-    $url = "https://hpanel.hostinger.com/api/communication/api/external/v1/auth/token/generate?gaid=" . urlencode($gaid);
-
-    $headers = [
-        'accept: application/json;charset=utf-8',
-        'content-type: application/json',
-        'origin: https://hpanel.hostinger.com',
-        'referer: https://hpanel.hostinger.com/',
-        'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
-    ];
-
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => 'null',
-        CURLOPT_HTTPHEADER => $headers,
-        CURLOPT_COOKIE => $cookies,
-        CURLOPT_SSL_VERIFYPEER => true,
-        CURLOPT_TIMEOUT => 30,
-    ]);
-
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    curl_close($ch);
-
-    if ($error || $httpCode !== 200) {
-        error_log("Token generation failed: HTTP $httpCode - $error");
-        return null;
-    }
-
-    $data = json_decode($response, true);
-
-    if (isset($data['success']) && $data['success'] && isset($data['data']['token'])) {
-        return [
-            'token' => $data['data']['token'],
-            'expires_at' => $data['data']['expires_at'] ?? null
-        ];
-    }
-
-    return null;
-}
-
-/**
- * Add JWT token to cookies string if not present
- * @param string $cookies Cookie string
- * @param string $token JWT token
- * @return string Updated cookies with JWT
- */
-function addJwtToCookies(string $cookies, string $token): string
-{
-    // Remove existing jwt if present
-    $cookies = preg_replace('/\bjwt=[^;]+;?\s*/', '', $cookies);
-
-    // Add the new token
-    $cookies = trim($cookies);
-    if (!empty($cookies) && substr($cookies, -1) !== ';') {
-        $cookies .= '; ';
-    }
-    $cookies .= 'jwt=' . $token;
-
-    return $cookies;
 }

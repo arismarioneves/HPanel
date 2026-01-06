@@ -7,6 +7,7 @@
     <title>Hostinger Dashboard</title>
     <link rel="stylesheet" href="assets/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="assets/config.js"></script>
 </head>
 
 <body>
@@ -32,115 +33,136 @@
             </div>
         </header>
 
-        <?php
-        require_once 'api/HostingerClient.php';
-        require_once 'api/config.php';
-
-        // Check if configured
-        if (!isConfigured()) {
-            echo '<div class="alert alert-warning">';
-            echo '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">';
-            echo '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>';
-            echo '<line x1="12" y1="9" x2="12" y2="13"></line>';
-            echo '<line x1="12" y1="17" x2="12.01" y2="17"></line>';
-            echo '</svg>';
-            echo 'Configure os cookies de autenticação para começar. <a href="settings.php" style="color: inherit; font-weight: 600;">Ir para Configurações</a>';
-            echo '</div>';
-            echo '</div></body></html>';
-            exit;
-        }
-
-        $client = new HostingerClient();
-        $websitesData = $client->getWebsites();
-
-        if (!$websitesData || !isset($websitesData['data'])) {
-            echo '<div class="alert alert-error">';
-            echo '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">';
-            echo '<circle cx="12" cy="12" r="10"></circle>';
-            echo '<line x1="15" y1="9" x2="9" y2="15"></line>';
-            echo '<line x1="9" y1="9" x2="15" y2="15"></line>';
-            echo '</svg>';
-            echo 'Erro ao carregar dados. Verifique se os cookies estão atualizados. <a href="settings.php" style="color: inherit; font-weight: 600;">Atualizar Cookies</a>';
-            echo '</div>';
-            echo '</div></body></html>';
-            exit;
-        }
-
-        $resources = $websitesData['data']['resources'] ?? [];
-        $totalServers = count($resources);
-        $totalWebsites = 0;
-
-        foreach ($resources as $resource) {
-            $totalWebsites += count($resource['websites'] ?? []);
-        }
-        ?>
-
         <div class="page-title">
             <h1>Meus Servidores</h1>
             <p>Gerencie todos os seus recursos Hostinger em um só lugar</p>
         </div>
 
+        <!-- Alert container -->
+        <div id="alertContainer"></div>
+
         <div class="stats-bar">
             <div class="stat-item">
-                <span class="stat-value"><?= $totalServers ?></span>
+                <span class="stat-value" id="totalServers">-</span>
                 <span class="stat-label">Servidores</span>
             </div>
             <div class="stat-item">
-                <span class="stat-value"><?= $totalWebsites ?></span>
+                <span class="stat-value" id="totalWebsites">-</span>
                 <span class="stat-label">Websites</span>
             </div>
         </div>
 
-        <div class="cards-grid">
-            <?php foreach ($resources as $resource): ?>
-                <?php
-                $websiteCount = count($resource['websites'] ?? []);
-                $mainDomain = '';
-                foreach ($resource['websites'] ?? [] as $site) {
-                    if ($site['vhostType'] === 'main') {
-                        $mainDomain = $site['domain'];
-                        break;
-                    }
-                }
-                if (!$mainDomain && !empty($resource['websites'])) {
-                    $mainDomain = $resource['websites'][0]['domain'];
-                }
-                ?>
-                <a href="server.php?orderId=<?= $resource['orderId'] ?>" class="server-card">
-                    <div class="server-card-header">
-                        <div>
-                            <h3 class="server-title"><?= htmlspecialchars($resource['title'] ?? 'Servidor') ?></h3>
-                            <span class="server-plan"><?= htmlspecialchars($resource['planDisplayableName'] ?? $resource['planName']) ?></span>
-                        </div>
-                    </div>
-
-                    <div class="server-stats">
-                        <div class="server-stat">
-                            <span class="server-stat-value"><?= $websiteCount ?></span>
-                            <span class="server-stat-label">Websites</span>
-                        </div>
-                        <div class="server-stat">
-                            <span class="server-stat-value"><?= htmlspecialchars($resource['server']['hostname'] ?? 'N/A') ?></span>
-                            <span class="server-stat-label">Servidor</span>
-                        </div>
-                    </div>
-
-                    <div class="server-datacenter">
-                        <span class="datacenter-flag">🌎</span>
-                        <?= htmlspecialchars($resource['datacenter']['title'] ?? 'N/A') ?>
-                    </div>
-                </a>
-            <?php endforeach; ?>
-        </div>
-
-        <?php if (empty($resources)): ?>
-            <div class="empty-state">
-                <div class="empty-state-icon">📦</div>
-                <h3>Nenhum servidor encontrado</h3>
-                <p>Não há servidores associados à sua conta.</p>
+        <div id="cardsGrid" class="cards-grid">
+            <div class="loading" style="grid-column: 1 / -1; display: flex; justify-content: center; padding: 60px;">
+                <div class="spinner"></div>
             </div>
-        <?php endif; ?>
+        </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check if configured
+            if (!HostingerConfig.isConfigured()) {
+                showAlert('warning', 'Configure os cookies de autenticação para começar. <a href="settings.php" style="color: inherit; font-weight: 600;">Ir para Configurações</a>');
+                document.getElementById('cardsGrid').innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await HostingerConfig.fetch('api/websites.php');
+                const data = await response.json();
+
+                if (!data.success) {
+                    showAlert('error', 'Erro ao carregar dados. Verifique se os cookies estão atualizados. <a href="settings.php" style="color: inherit; font-weight: 600;">Atualizar Cookies</a>');
+                    document.getElementById('cardsGrid').innerHTML = '';
+                    return;
+                }
+
+                renderServers(data.data);
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('error', 'Erro de conexão. <a href="settings.php" style="color: inherit; font-weight: 600;">Verificar Configurações</a>');
+                document.getElementById('cardsGrid').innerHTML = '';
+            }
+        });
+
+        function showAlert(type, message) {
+            const icons = {
+                warning: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>',
+                error: '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>',
+                success: '<polyline points="20 6 9 17 4 12"></polyline>'
+            };
+
+            document.getElementById('alertContainer').innerHTML = `
+                <div class="alert alert-${type}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        ${icons[type]}
+                    </svg>
+                    ${message}
+                </div>
+            `;
+        }
+
+        function renderServers(resources) {
+            const grid = document.getElementById('cardsGrid');
+
+            if (!resources || resources.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>Nenhum servidor encontrado</h3>
+                        <p>Não há servidores associados à sua conta.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Update stats
+            let totalWebsites = 0;
+            resources.forEach(r => totalWebsites += (r.websites || []).length);
+            document.getElementById('totalServers').textContent = resources.length;
+            document.getElementById('totalWebsites').textContent = totalWebsites;
+
+            // Render cards
+            grid.innerHTML = resources.map(resource => {
+                const websiteCount = (resource.websites || []).length;
+                const mainSite = (resource.websites || []).find(s => s.vhostType === 'main');
+                const mainDomain = mainSite ? mainSite.domain : (resource.websites?.[0]?.domain || '');
+
+                return `
+                    <a href="server.php?orderId=${resource.orderId}" class="server-card">
+                        <div class="server-card-header">
+                            <div>
+                                <h3 class="server-title">${escapeHtml(resource.title || 'Servidor')}</h3>
+                                <span class="server-plan">${escapeHtml(resource.planDisplayableName || resource.planName)}</span>
+                            </div>
+                        </div>
+                        <div class="server-stats">
+                            <div class="server-stat">
+                                <span class="server-stat-value">${websiteCount}</span>
+                                <span class="server-stat-label">Websites</span>
+                            </div>
+                            <div class="server-stat">
+                                <span class="server-stat-value">${escapeHtml(resource.server?.hostname || 'N/A')}</span>
+                                <span class="server-stat-label">Servidor</span>
+                            </div>
+                        </div>
+                        <div class="server-datacenter">
+                            <span class="datacenter-flag">🌎</span>
+                            ${escapeHtml(resource.datacenter?.title || 'N/A')}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
 </body>
 
 </html>
