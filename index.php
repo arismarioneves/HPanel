@@ -78,13 +78,116 @@
                     return;
                 }
 
+                // Render cards immediately without usage data
                 renderServers(data.data);
+
+                // Load usage data in background for each server
+                loadUsageInBackground(data.data);
             } catch (error) {
                 console.error('Error:', error);
                 showAlert('error', 'Erro de conexão. <a href="settings.php" style="color: inherit; font-weight: 600;">Verificar Configurações</a>');
                 document.getElementById('cardsGrid').innerHTML = '';
             }
         });
+
+        async function loadUsageInBackground(resources) {
+            for (const resource of resources) {
+                // Get main domain and username
+                const mainSite = (resource.websites || []).find(s => s.vhostType === 'main') || resource.websites?.[0];
+                if (!mainSite) continue;
+
+                try {
+                    const url = `api/server-usage.php?orderId=${resource.orderId}&username=${encodeURIComponent(mainSite.username)}&domain=${encodeURIComponent(mainSite.domain)}`;
+                    const response = await HostingerConfig.fetch(url);
+                    const data = await response.json();
+
+                    if (data.success && data.usage) {
+                        updateServerUsageBar(resource.orderId, data.usage);
+                    }
+                } catch (error) {
+                    console.error(`Error loading usage for ${resource.orderId}:`, error);
+                }
+            }
+        }
+
+        function updateServerUsageBar(orderId, usage) {
+            const usageInfo = getHighestUsageFromData(usage);
+            if (!usageInfo) return;
+
+            const card = document.querySelector(`a[href="server.php?orderId=${orderId}"]`);
+            if (!card) return;
+
+            // Find or create usage container - add at the END of card
+            let usageContainer = card.querySelector('.server-usage');
+            if (!usageContainer) {
+                usageContainer = document.createElement('div');
+                usageContainer.className = 'server-usage';
+                card.appendChild(usageContainer);
+            }
+
+            usageContainer.innerHTML = `
+                <div class="usage-header">
+                    <span class="usage-label">${usageInfo.icon} ${usageInfo.label}</span>
+                    <span class="usage-percent ${usageInfo.class}">${usageInfo.percent}%</span>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-bar-fill ${usageInfo.class}" style="width: ${usageInfo.percent}%"></div>
+                </div>
+            `;
+        }
+
+        function getHighestUsageFromData(usage) {
+            if (!usage) return null;
+
+            const usageTypes = [{
+                    key: 'storage',
+                    label: 'Disco',
+                    icon: '💾'
+                },
+                {
+                    key: 'inodes',
+                    label: 'Inodes',
+                    icon: '📁'
+                },
+                {
+                    key: 'databases',
+                    label: 'BD',
+                    icon: '🗄️'
+                },
+                {
+                    key: 'subdomains',
+                    label: 'Subdomínios',
+                    icon: '🌐'
+                },
+                {
+                    key: 'ftp_accounts',
+                    label: 'FTP',
+                    icon: '📂'
+                }
+            ];
+
+            let highest = null;
+            let highestPercent = -1;
+
+            for (const type of usageTypes) {
+                const data = usage[type.key];
+                if (data && data.limit && data.limit > 0) {
+                    // Use 1 decimal place like server.php does
+                    const percent = Math.min(100, (data.value / data.limit) * 100);
+                    const percentRounded = Math.round(percent * 10) / 10; // 1 decimal
+                    if (percent > highestPercent) {
+                        highestPercent = percent;
+                        highest = {
+                            ...type,
+                            percent: percentRounded,
+                            class: percent >= 90 ? 'danger' : percent >= 70 ? 'warning' : 'normal'
+                        };
+                    }
+                }
+            }
+
+            return highest;
+        }
 
         function showAlert(type, message) {
             const icons = {
@@ -123,11 +226,9 @@
             document.getElementById('totalServers').textContent = resources.length;
             document.getElementById('totalWebsites').textContent = totalWebsites;
 
-            // Render cards
+            // Render cards (usage will be loaded in background)
             grid.innerHTML = resources.map(resource => {
                 const websiteCount = (resource.websites || []).length;
-                const mainSite = (resource.websites || []).find(s => s.vhostType === 'main');
-                const mainDomain = mainSite ? mainSite.domain : (resource.websites?.[0]?.domain || '');
 
                 return `
                     <a href="server.php?orderId=${resource.orderId}" class="server-card">

@@ -298,6 +298,66 @@ body::before {
     color: var(--text-secondary);
 }
 
+/* Server Usage Bar */
+.server-usage {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--glass-border);
+}
+
+.usage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+}
+
+.usage-label {
+    color: var(--text-secondary);
+}
+
+.usage-percent {
+    font-weight: 600;
+}
+
+.usage-percent.normal {
+    color: var(--success);
+}
+
+.usage-percent.warning {
+    color: var(--warning);
+}
+
+.usage-percent.danger {
+    color: var(--danger);
+}
+
+.usage-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.usage-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition-normal);
+}
+
+.usage-bar-fill.normal {
+    background: linear-gradient(90deg, var(--success), #34d399);
+}
+
+.usage-bar-fill.warning {
+    background: linear-gradient(90deg, var(--warning), #fbbf24);
+}
+
+.usage-bar-fill.danger {
+    background: linear-gradient(90deg, var(--danger), #f87171);
+}
+
 .datacenter-flag {
     width: 20px;
     height: 14px;
