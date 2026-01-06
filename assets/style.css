@@ -263,6 +263,32 @@ body::before {
     border-radius: var(--radius-sm);
 }
 
+/* Plan color variants */
+.server-plan.plan-startup {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.server-plan.plan-professional {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.server-plan.plan-enterprise {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.server-plan.plan-business {
+    color: #ec4899;
+    background: rgba(236, 72, 153, 0.15);
+}
+
+.server-plan.plan-premium {
+    color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.15);
+}
+
 .server-stats {
     display: flex;
     gap: var(--spacing-md);

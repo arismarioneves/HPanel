@@ -229,13 +229,15 @@
             // Render cards (usage will be loaded in background)
             grid.innerHTML = resources.map(resource => {
                 const websiteCount = (resource.websites || []).length;
+                const planName = resource.planDisplayableName || resource.planName || '';
+                const planClass = getPlanClass(planName);
 
                 return `
                     <a href="server.php?orderId=${resource.orderId}" class="server-card">
                         <div class="server-card-header">
                             <div>
                                 <h3 class="server-title">${escapeHtml(resource.title || 'Servidor')}</h3>
-                                <span class="server-plan">${escapeHtml(resource.planDisplayableName || resource.planName)}</span>
+                                <span class="server-plan ${planClass}">${escapeHtml(planName)}</span>
                             </div>
                         </div>
                         <div class="server-stats">
@@ -255,6 +257,16 @@
                     </a>
                 `;
             }).join('');
+        }
+
+        function getPlanClass(planName) {
+            const name = (planName || '').toLowerCase();
+            if (name.includes('enterprise')) return 'plan-enterprise';
+            if (name.includes('professional')) return 'plan-professional';
+            if (name.includes('startup')) return 'plan-startup';
+            if (name.includes('business')) return 'plan-business';
+            if (name.includes('premium')) return 'plan-premium';
+            return '';
         }
 
         function escapeHtml(text) {
