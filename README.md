@@ -22,35 +22,38 @@ O Hostinger Dashboard oferece uma interface simplificada para gerenciar todos os
 
 ## 🔐 Autenticação
 
-O dashboard utiliza cookies de sessão do hPanel da Hostinger para autenticação. Os cookies são armazenados localmente no **localStorage** do navegador.
+O dashboard utiliza o **token JWT** do hPanel da Hostinger para autenticação. O token é armazenado de forma segura no servidor em arquivos de sessão.
 
 ### Como funciona
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │   Seu Navegador │────▶│  hPanel Hostinger│────▶│    Dashboard    │
-│   (Logado)      │     │  (Cookies+JWT)   │     │  (localStorage) │
+│   (Logado)      │     │  (Token JWT)     │     │  (Servidor)     │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
 ```
 
-### Armazenamento de Credenciais
+### Formato de Sessão
 
-As credenciais são armazenadas no **localStorage** do navegador:
+As sessões são armazenadas em arquivos JSON na pasta `cookies/`:
 
-- ✅ **Privado** - Dados ficam apenas no seu navegador
-- ✅ **Sem arquivos** - Não precisa criar arquivos de configuração
-- ✅ **Por usuário** - Cada usuário pode ter suas próprias credenciais
+```json
+{
+    "token": "eyJ0eXAiOiJKV1Qi...",
+    "gaid": "GA1.1.000000000.0000000000",
+    "update": "2026-01-07 15:00:00"
+}
+```
 
-### Sobre os Cookies e JWT
+### Sobre o Token JWT
 
-| Cookie | Tipo | Descrição |
-|--------|------|-----------|
-| `jwt` | HttpOnly | Token JWT de autenticação principal (1h de validade) |
-| `auth_info` | Normal | Informações do cliente |
-| `language` | Normal | Preferência de idioma |
-| `hostingerDeviceId` | Normal | ID do dispositivo |
+| Campo | Descrição |
+|-------|-----------|
+| `token` | Token JWT de autenticação (~1h de validade) |
+| `gaid` | ID do Google Analytics (opcional) |
+| `update` | Data/hora da última atualização |
 
-> ⚠️ O cookie `jwt` é marcado como **HttpOnly**, o que significa que JavaScript não pode acessá-lo. Por isso, é necessário usar o método cURL para copiar todos os cookies.
+> ⚠️ O token JWT expira a cada **~1 hora**. Será necessário atualizá-lo periodicamente.
 
 ---
 
@@ -70,42 +73,41 @@ git clone https://github.com/seu-usuario/Hostinger-Dashboard.git
 cd Hostinger-Dashboard
 ```
 
-2. **Acesse o dashboard** no navegador:
+2. **Crie a pasta de cookies** (se não existir):
+```bash
+mkdir cookies
+```
+
+3. **Acesse o dashboard** no navegador:
 ```
 http://localhost/Hostinger-Dashboard/
 ```
 
-3. **Configure os cookies** na página de Configurações.
-
-> 💡 Não é necessário criar nenhum arquivo de configuração! Os dados são salvos automaticamente no navegador.
+4. **Configure o token JWT** na página de Configurações.
 
 ---
 
-## ⚙️ Configuração dos Cookies
+## ⚙️ Configuração do Token JWT
 
 ### Passo a passo
 
 1. Acesse [hpanel.hostinger.com](https://hpanel.hostinger.com) e faça login
 
-2. Abra o DevTools (`F12`) → Aba **Network**
+2. Abra o DevTools (`F12`)
 
-3. Recarregue a página (`F5`)
+3. Vá para **Application** → **Cookies** → **hpanel.hostinger.com**
 
-4. Clique em qualquer requisição da lista
+4. Encontre o cookie chamado `jwt` e copie seu valor
 
-5. Botão direito → **Copy** → **Copy as cURL (bash)**
+5. Cole na página de Configurações do Dashboard e salve
 
-6. Cole no campo de cookies do Dashboard e salve
+### Dica
 
-### Exemplo de cURL
+O token começa com `eyJ` e é uma string longa. Exemplo:
 
-```bash
-curl 'https://hpanel.hostinger.com/api/...' \
-  -H 'accept: application/json' \
-  -b 'language=pt_BR; jwt=eyJ0eXAiOiJKV1Q...; auth_info=...'
 ```
-
-O sistema extrai automaticamente os cookies do comando cURL.
+eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3Mzc...
+```
 
 ---
 
@@ -115,19 +117,22 @@ O sistema extrai automaticamente os cookies do comando cURL.
 Hostinger-Dashboard/
 ├── index.php           # Página principal (lista servidores)
 ├── server.php          # Detalhes do servidor e websites
-├── settings.php        # Configurações e cookies
+├── settings.php        # Configurações (token JWT)
+├── cookies/            # Arquivos de sessão (JSON)
 ├── assets/
 │   ├── style.css       # Estilos do dashboard
-│   └── config.js       # Gerenciamento de localStorage
+│   └── config.js       # Gerenciamento de sessão
 └── api/
-    ├── config.php      # Funções de configuração
-    ├── HostingerClient.php  # Cliente da API Hostinger
-    ├── websites.php    # Endpoint: listar servidores
-    ├── server.php      # Endpoint: detalhes do servidor
-    ├── databases.php   # Endpoint: listar bancos
-    ├── phpmyadmin.php  # Endpoint: link phpMyAdmin
-    ├── file-browser.php # Endpoint: link gerenciador de arquivos
-    ├── php-version.php # Endpoint: versão PHP
+    ├── config.php          # Funções de configuração
+    ├── save-config.php     # Salvar token
+    ├── jwt-status.php      # Status do token
+    ├── HostingerClient.php # Cliente da API Hostinger
+    ├── websites.php        # Endpoint: listar servidores
+    ├── server.php          # Endpoint: detalhes do servidor
+    ├── databases.php       # Endpoint: listar bancos
+    ├── phpmyadmin.php      # Endpoint: link phpMyAdmin
+    ├── file-browser.php    # Endpoint: link gerenciador de arquivos
+    ├── php-version.php     # Endpoint: versão PHP
     └── set-php-version.php # Endpoint: alterar versão PHP
 ```
 
@@ -135,9 +140,10 @@ Hostinger-Dashboard/
 
 ## 🛡️ Segurança
 
-- Credenciais são armazenadas apenas no localStorage do seu navegador
+- Token e sessão são armazenados no servidor (pasta `cookies/`)
+- Hash único identifica cada sessão (salvo no localStorage do navegador)
 - Dados não são enviados para nenhum servidor externo
-- Os cookies expiram periodicamente (~1 hora)
+- O token expira automaticamente após ~1 hora
 - Recomenda-se usar em ambiente local ou protegido
 
 ---
@@ -156,7 +162,7 @@ O dashboard usa APIs internas do hPanel (não oficiais):
 
 - As APIs podem mudar sem aviso (são internas)
 - Tokens JWT expiram após ~1 hora
-- Algumas ações podem falhar se os cookies forem antigos
+- Algumas ações podem falhar se o token for antigo
 
 ---
 

@@ -4,6 +4,13 @@
  * Configuration Management
  * Handles reading and writing of session files in cookies/ folder
  * Each user has a unique session file identified by a hash stored in localStorage
+ * 
+ * New simplified format:
+ * {
+ *     "token": "JWT token",
+ *     "gaid": "GA1.1.xxx",
+ *     "update": "2026-01-07 15:00:00"
+ * }
  */
 
 define('COOKIES_DIR', __DIR__ . '/../cookies/');
@@ -39,30 +46,44 @@ function getSessionFilePath(string $hash): string
 /**
  * Get configuration from session file
  * @param string|null $hash Session hash (reads from header if null)
- * @return array Configuration data
+ * @return array Configuration data with token, gaid
  */
 function getConfigFromSession(?string $hash = null): array
 {
     $hash = $hash ?? getSessionHash();
 
     if (!$hash) {
-        return ['cookies' => '', 'gaid' => ''];
+        return ['token' => '', 'gaid' => ''];
     }
 
     $filePath = getSessionFilePath($hash);
 
     if (!file_exists($filePath)) {
-        return ['cookies' => '', 'gaid' => ''];
+        return ['token' => '', 'gaid' => ''];
     }
 
     $content = file_get_contents($filePath);
-    return json_decode($content, true) ?? ['cookies' => '', 'gaid' => ''];
+    $data = json_decode($content, true) ?? [];
+
+    // Support old format (cookies) and new format (token)
+    if (isset($data['cookies']) && !isset($data['token'])) {
+        // Extract JWT from cookies for backwards compatibility
+        if (preg_match('/jwt=([^;]+)/', $data['cookies'], $matches)) {
+            $data['token'] = $matches[1];
+        }
+    }
+
+    return [
+        'token' => $data['token'] ?? '',
+        'gaid' => $data['gaid'] ?? '',
+        'update' => $data['update'] ?? ''
+    ];
 }
 
 /**
  * Save configuration to session file
- * @param array $data Configuration data (cookies, gaid)
- * @param string|null $hash Session hash (reads from header if null)
+ * @param array $data Configuration data (token, gaid)
+ * @param string|null $hash Session hash (generates new if null)
  * @return array Result with success status and hash
  */
 function saveConfigToSession(array $data, ?string $hash = null): array
@@ -74,8 +95,13 @@ function saveConfigToSession(array $data, ?string $hash = null): array
 
     $filePath = getSessionFilePath($hash);
 
-    $data['lastUpdated'] = date('Y-m-d H:i:s');
-    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    $saveData = [
+        'token' => $data['token'] ?? '',
+        'gaid' => $data['gaid'] ?? '',
+        'update' => date('Y-m-d H:i:s')
+    ];
+
+    $json = json_encode($saveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
     $success = file_put_contents($filePath, $json) !== false;
 
@@ -86,35 +112,9 @@ function saveConfigToSession(array $data, ?string $hash = null): array
 }
 
 /**
- * Check if session is configured
- * @param string|null $hash Session hash
- * @return bool True if cookies exist
- */
-function isSessionConfigured(?string $hash = null): bool
-{
-    $config = getConfigFromSession($hash);
-    return !empty($config['cookies']);
-}
-
-/**
- * Delete session file
- * @param string $hash Session hash
- * @return bool Success status
- */
-function deleteSession(string $hash): bool
-{
-    $filePath = getSessionFilePath($hash);
-
-    if (file_exists($filePath)) {
-        return unlink($filePath);
-    }
-
-    return true;
-}
-
-/**
- * Legacy function for HostingerClient compatibility
- * Reads config from session using header hash
+ * Get configuration from HTTP headers (for API requests)
+ * Uses session hash to load from file
+ * @return array Configuration data
  */
 function getConfigFromHeaders(): array
 {
@@ -122,34 +122,26 @@ function getConfigFromHeaders(): array
 }
 
 /**
- * Extract cookies from a cURL command or raw cookie string
- * @param string $input cURL command or cookie string
- * @return string Extracted cookies
+ * Build cookies string from token for API requests
+ * @param string $token JWT token
+ * @return string Cookie string for cURL
  */
-function extractCookies(string $input): string
+function buildCookiesFromToken(string $token): string
 {
-    // If it's a cURL command, extract the -b or --cookie value
-    if (preg_match("/-b\s+'([^']+)'/", $input, $matches)) {
-        return $matches[1];
-    }
-    if (preg_match('/-b\s+"([^"]+)"/', $input, $matches)) {
-        return $matches[1];
-    }
-
-    // If it looks like raw cookies (contains key=value pairs with semicolons)
-    if (strpos($input, '=') !== false && strpos($input, ';') !== false) {
-        return trim($input);
-    }
-
-    return $input;
+    return 'jwt=' . $token . '; language=pt_BR';
 }
 
 /**
- * Check if cookies already contain a JWT token
- * @param string $cookies Cookie string
- * @return bool True if JWT is present
+ * Check if the session has a valid JWT token
+ * @param string|null $token Token to check (or read from session)
+ * @return bool True if token exists
  */
-function hasJwtToken(string $cookies): bool
+function hasJwtToken(?string $token = null): bool
 {
-    return strpos($cookies, 'jwt=') !== false;
+    if ($token === null) {
+        $config = getConfigFromSession();
+        $token = $config['token'] ?? '';
+    }
+
+    return !empty($token) && strlen($token) > 50;
 }

@@ -13,15 +13,16 @@ class HostingerClient
     private string $cookies;
     private string $gaid;
 
-    public function __construct(?string $cookies = null, ?string $gaid = null)
+    public function __construct(?string $token = null, ?string $gaid = null)
     {
-        // If cookies/gaid provided, use them; otherwise read from HTTP headers
-        if ($cookies !== null) {
-            $this->cookies = $cookies;
+        // If token/gaid provided, use them; otherwise read from session
+        if ($token !== null) {
+            $this->cookies = buildCookiesFromToken($token);
             $this->gaid = $gaid ?? '';
         } else {
             $config = getConfigFromHeaders();
-            $this->cookies = $config['cookies'] ?? '';
+            $token = $config['token'] ?? '';
+            $this->cookies = buildCookiesFromToken($token);
             $this->gaid = $config['gaid'] ?? '';
         }
     }

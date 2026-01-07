@@ -1,6 +1,6 @@
 /**
  * Hostinger Dashboard Configuration Manager
- * Stores session hash in localStorage, cookies are stored server-side
+ * Stores session hash in localStorage, token is stored server-side
  */
 
 const HostingerConfig = {
@@ -72,12 +72,12 @@ const HostingerConfig = {
     },
 
     /**
-     * Save configuration to server
-     * @param {string} cookies - Cookie string
-     * @param {string} gaid - Google Analytics ID
+     * Save JWT token to server
+     * @param {string} token - JWT token
+     * @param {string} gaid - Google Analytics ID (optional)
      * @returns {Promise<Object>} Result with success and hash
      */
-    async save(cookies, gaid) {
+    async save(token, gaid = 'GA1.1.000000000.0000000000') {
         const existingHash = this.getHash();
 
         const response = await fetch('api/save-config.php', {
@@ -86,7 +86,7 @@ const HostingerConfig = {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                cookies: cookies,
+                token: token,
                 gaid: gaid,
                 hash: existingHash
             })
@@ -102,51 +102,18 @@ const HostingerConfig = {
     },
 
     /**
-     * Extract cookies from cURL command or raw string
-     * @param {string} input - cURL command or cookie string
-     * @returns {string} Extracted cookies
-     */
-    extractCookies(input) {
-        // Check for -b 'cookies' pattern
-        let match = input.match(/-b\s+'([^']+)'/);
-        if (match) return match[1];
-
-        // Check for -b "cookies" pattern
-        match = input.match(/-b\s+"([^"]+)"/);
-        if (match) return match[1];
-
-        // If it looks like raw cookies
-        if (input.includes('=') && input.includes(';')) {
-            return input.trim();
-        }
-
-        return input;
-    },
-
-    /**
-     * Check if cookies contain JWT token
-     * @param {string} cookies - Cookie string
-     * @returns {boolean}
-     */
-    hasJwt(cookies) {
-        return cookies && cookies.includes('jwt=');
-    },
-
-    /**
-     * Get JWT expiration info from cookies
-     * This requires fetching from server since we don't store cookies client-side
-     * @returns {Promise<Object|null>} { minutesLeft, expired, warning }
+     * Get JWT status (expiration time, etc)
+     * @returns {Promise<Object>} JWT status info
      */
     async getJwtStatus() {
-        if (!this.isConfigured()) return null;
+        if (!this.isConfigured()) return { success: false };
 
         try {
             const response = await this.fetch('api/jwt-status.php');
-            const data = await response.json();
-            return data.success ? data.status : null;
-        } catch (e) {
-            console.error('Error getting JWT status:', e);
-            return null;
+            return await response.json();
+        } catch (error) {
+            console.error('Error getting JWT status:', error);
+            return { success: false, error: error.message };
         }
     },
 

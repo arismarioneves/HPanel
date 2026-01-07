@@ -35,13 +35,13 @@
 
         <div class="page-title">
             <h1>Configurações</h1>
-            <p>Configure os cookies de autenticação para acessar a API da Hostinger</p>
+            <p>Configure o token JWT para acessar as funcionalidades do dashboard</p>
         </div>
 
         <!-- Alert container -->
         <div id="alertContainer"></div>
 
-        <!-- Status row: session + token side by side -->
+        <!-- Status Section -->
         <div class="status-row">
             <div id="statusIndicator" class="status-indicator disconnected">
                 <span class="status-dot"></span>
@@ -64,30 +64,31 @@
         </div>
 
         <div class="settings-form">
-            <div class="form-row">
-                <div class="form-group" style="flex: 2;">
-                    <label class="form-label">Cookies de Autenticação</label>
-                    <p class="form-hint">Cole aqui os cookies copiados do navegador. Você pode colar o comando cURL completo ou apenas a string de cookies.</p>
-                    <textarea
-                        id="cookiesInput"
-                        class="form-textarea"
-                        placeholder="Cole o comando cURL (bash) completo aqui...&#10;&#10;Exemplo:&#10;curl 'https://hpanel.hostinger.com/...' \&#10;  -H 'accept: ...' \&#10;  -b 'language=pt_BR; jwt=eyJ...; ...'"></textarea>
+            <!-- JWT Token Section -->
+            <div class="form-section jwt-section">
+                <div class="section-header">
+                    <h4 class="section-label">🔑 Token JWT</h4>
+                    <span class="token-note">Expira a cada ~1 hora</span>
                 </div>
 
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">Google Analytics ID</label>
-                    <p class="form-hint">ID do Google Analytics usado nas requisições.</p>
-                    <input
-                        type="text"
-                        id="gaidInput"
-                        class="form-input"
-                        value="GA1.1.000000000.0000000000"
-                        placeholder="GA1.1.000000000.0000000000">
-                    <p class="form-hint" style="margin-top: 4px; font-size: 0.75rem;">Encontrado nos cookies como _ga</p>
+                <div class="instructions-box">
+                    <p><strong>Como obter:</strong></p>
+                    <ol>
+                        <li>Acesse o <a href="https://hpanel.hostinger.com" target="_blank">hPanel da Hostinger</a></li>
+                        <li>Abra DevTools (<kbd>F12</kbd>)</li>
+                        <li>Vá em <strong>Application</strong> → <strong>Cookies</strong> → <strong>hpanel.hostinger.com</strong></li>
+                        <li>Copie o valor do cookie <code>jwt</code></li>
+                    </ol>
                 </div>
+
+                <input
+                    type="text"
+                    id="jwtInput"
+                    class="form-input token-input"
+                    placeholder="Cole o token JWT aqui (começa com eyJ...)">
             </div>
 
-            <!-- Buttons side by side -->
+            <!-- Buttons -->
             <div class="buttons-row">
                 <button type="button" class="btn btn-primary" id="saveBtn">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -95,7 +96,7 @@
                         <polyline points="17 21 17 13 7 13 7 21"></polyline>
                         <polyline points="7 3 7 8 15 8"></polyline>
                     </svg>
-                    Salvar
+                    Salvar Token
                 </button>
 
                 <button type="button" class="btn btn-secondary" id="clearBtn">
@@ -103,7 +104,7 @@
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
-                    Limpar
+                    Limpar Sessão
                 </button>
             </div>
         </div>
@@ -165,16 +166,6 @@
             color: var(--danger);
         }
 
-        .form-row {
-            display: flex;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-md);
-        }
-
-        .form-row .form-group {
-            margin-bottom: 0;
-        }
-
         .buttons-row {
             display: flex;
             gap: var(--spacing-sm);
@@ -183,18 +174,100 @@
         .buttons-row .btn {
             flex: 1;
             justify-content: center;
-            padding: 10px 16px;
+            padding: 12px 20px;
+        }
+
+        /* Form Sections */
+        .form-section {
+            /* background: var(--glass-bg); */
+            /* border: 1px solid var(--glass-border); */
+            /* border-radius: var(--radius-md); */
+            /* padding: var(--spacing-lg); */
+            margin-bottom: var(--spacing-md);
+        }
+
+        .jwt-section {
+            /* border-color: var(--primary); */
+            /* background: rgba(103, 61, 230, 0.05); */
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .section-label {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .token-note {
+            font-size: 0.8rem;
+            color: var(--warning);
+            background: rgba(245, 158, 11, 0.1);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .instructions-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .instructions-box p {
+            margin: 0 0 var(--spacing-sm) 0;
+        }
+
+        .instructions-box ol {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .instructions-box li {
+            margin-bottom: 4px;
+        }
+
+        .instructions-box code {
+            background: rgba(103, 61, 230, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: var(--primary-light);
+        }
+
+        .instructions-box kbd {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            border: 1px solid var(--glass-border);
+        }
+
+        .instructions-box a {
+            color: var(--primary-light);
+        }
+
+        .token-input {
+            font-family: monospace;
+            font-size: 0.9rem;
+            padding: 14px;
         }
 
         .btn-sm {
-            padding: 4px 10px;
-            font-size: 0.8rem;
+            padding: 6px 12px;
+            font-size: 0.85rem;
         }
 
         @media (max-width: 768px) {
 
             .status-row,
-            .form-row,
             .buttons-row {
                 flex-direction: column;
             }
@@ -204,7 +277,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             updateStatus();
-
             document.getElementById('saveBtn').addEventListener('click', saveConfig);
             document.getElementById('clearBtn').addEventListener('click', clearConfig);
         });
@@ -217,43 +289,47 @@
             btn.innerHTML = '<span class="spinner" style="width: 18px; height: 18px; border-width: 2px;"></span> Salvando...';
 
             try {
-                let cookies = document.getElementById('cookiesInput').value.trim();
-                const gaid = document.getElementById('gaidInput').value.trim();
+                const token = document.getElementById('jwtInput').value.trim();
 
-                if (!cookies) {
-                    showAlert('error', 'Por favor, cole os cookies de autenticação.');
+                if (!token) {
+                    showAlert('error', 'Por favor, cole o token JWT.');
                     return;
                 }
 
-                // Save to server (returns hash)
-                const result = await HostingerConfig.save(cookies, gaid);
+                if (!token.startsWith('eyJ')) {
+                    showAlert('error', 'Token JWT inválido. O token deve começar com "eyJ".');
+                    return;
+                }
+
+                // Save to server
+                const result = await HostingerConfig.save(token);
 
                 if (!result.success) {
                     showAlert('error', 'Erro ao salvar: ' + (result.error || 'Erro desconhecido'));
                     return;
                 }
 
-                // Test the connection by fetching websites
-                btn.innerHTML = '<span class="spinner" style="width: 18px; height: 18px; border-width: 2px;"></span> Testando conexão...';
+                // Test the connection
+                btn.innerHTML = '<span class="spinner" style="width: 18px; height: 18px; border-width: 2px;"></span> Testando...';
 
                 try {
                     const testResponse = await HostingerConfig.fetch('api/websites.php');
                     const testData = await testResponse.json();
 
                     if (testData.success && testData.data && testData.data.length > 0) {
-                        showAlert('success', `Conexão verificada! ${testData.data.length} servidor(es) encontrado(s).`);
-                        document.getElementById('cookiesInput').value = ''; // Clear for security
+                        showAlert('success', `✓ Conectado! ${testData.data.length} servidor(es) encontrado(s).`);
+                        document.getElementById('jwtInput').value = ''; // Clear for security
                     } else {
-                        showAlert('warning', 'Cookies salvos, mas a conexão falhou. Verifique se os cookies estão corretos e não expiraram.');
+                        showAlert('warning', 'Token salvo, mas a conexão falhou. Verifique se o token está correto.');
                     }
                 } catch (testError) {
-                    showAlert('warning', 'Cookies salvos, mas não foi possível verificar a conexão.');
+                    showAlert('warning', 'Token salvo, mas não foi possível verificar a conexão.');
                 }
 
                 updateStatus();
             } catch (error) {
                 console.error('Error:', error);
-                showAlert('error', 'Erro ao salvar configurações.');
+                showAlert('error', 'Erro ao salvar token.');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
@@ -291,21 +367,22 @@
             sessionInfo.textContent = 'ID: ' + hash.substring(0, 8) + '...';
 
             // Check JWT status
-            const jwtStatus = await HostingerConfig.getJwtStatus();
-            if (jwtStatus) {
+            const jwtData = await HostingerConfig.getJwtStatus();
+            if (jwtData && jwtData.success && jwtData.status) {
+                const jwt = jwtData.status;
                 tokenStatus.style.display = 'flex';
 
-                if (jwtStatus.expired) {
+                if (jwt.expired) {
                     tokenStatus.className = 'token-status expired';
-                    tokenStatusText.innerHTML = '<strong style="color: var(--danger);">Token EXPIRADO</strong> — Atualize os cookies';
+                    tokenStatusText.innerHTML = '<strong style="color: var(--danger);">Token EXPIRADO</strong>';
                     hpanelLink.style.display = 'flex';
-                } else if (jwtStatus.warning) {
+                } else if (jwt.warning || jwt.minutesLeft < 15) {
                     tokenStatus.className = 'token-status warning';
-                    tokenStatusText.innerHTML = `Token expira em <strong style="color: var(--warning);">${jwtStatus.minutesLeft} min</strong> — Atualize em breve`;
+                    tokenStatusText.innerHTML = `Expira em <strong style="color: var(--warning);">${jwt.minutesLeft} min</strong>`;
                     hpanelLink.style.display = 'flex';
                 } else {
                     tokenStatus.className = 'token-status valid';
-                    tokenStatusText.innerHTML = `Token válido por <strong style="color: var(--success);">${jwtStatus.minutesLeft} min</strong>`;
+                    tokenStatusText.innerHTML = `Válido por <strong style="color: var(--success);">${jwt.minutesLeft} min</strong>`;
                     hpanelLink.style.display = 'none';
                 }
             } else {

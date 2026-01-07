@@ -16,21 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/config.php';
 
 $config = getConfigFromSession();
-$cookies = $config['cookies'] ?? '';
+$token = $config['token'] ?? '';
 
-if (empty($cookies) || !hasJwtToken($cookies)) {
+if (empty($token) || !hasJwtToken($token)) {
     echo json_encode(['success' => false, 'error' => 'No JWT found']);
     exit;
 }
 
-// Extract JWT from cookies
-if (!preg_match('/jwt=([^;]+)/', $cookies, $matches)) {
-    echo json_encode(['success' => false, 'error' => 'Could not parse JWT']);
-    exit;
-}
-
-$jwt = $matches[1];
-$parts = explode('.', $jwt);
+$parts = explode('.', $token);
 
 if (count($parts) !== 3) {
     echo json_encode(['success' => false, 'error' => 'Invalid JWT format']);
