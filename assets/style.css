@@ -253,6 +253,10 @@ body::before {
     font-weight: 600;
     margin-bottom: var(--spacing-xs);
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 330px;
 }
 
 .server-plan {

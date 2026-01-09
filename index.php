@@ -238,7 +238,7 @@
                     <a href="server.php?orderId=${resource.orderId}" class="server-card">
                         <div class="server-card-header">
                             <div>
-                                <h3 class="server-title">${escapeHtml(resource.title || 'Servidor')}</h3>
+                                <h3 class="server-title" title="${escapeHtml(resource.title || 'Servidor')}">${escapeHtml(resource.title || 'Servidor')}</h3>
                                 <span class="server-plan ${planClass}">${escapeHtml(planName)}</span>
                             </div>
                         </div>
