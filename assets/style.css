@@ -343,6 +343,12 @@ body::before {
     color: var(--text-secondary);
 }
 
+.cache-indicator {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    cursor: help;
+}
+
 .usage-percent {
     font-weight: 600;
 }

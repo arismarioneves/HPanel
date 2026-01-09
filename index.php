@@ -102,7 +102,7 @@
                     const data = await response.json();
 
                     if (data.success && data.usage) {
-                        updateServerUsageBar(resource.orderId, data.usage);
+                        updateServerUsageBar(resource.orderId, data.usage, data.fromCache, data.cacheAge);
                     }
                 } catch (error) {
                     console.error(`Error loading usage for ${resource.orderId}:`, error);
@@ -110,7 +110,7 @@
             }
         }
 
-        function updateServerUsageBar(orderId, usage) {
+        function updateServerUsageBar(orderId, usage, fromCache = false, cacheAge = null) {
             const usageInfo = getHighestUsageFromData(usage);
             if (!usageInfo) return;
 
@@ -125,9 +125,11 @@
                 card.appendChild(usageContainer);
             }
 
+            const cacheIndicator = fromCache ? `<span class="cache-indicator" title="Dados em cache (${cacheAge})">⚡</span>` : '';
+
             usageContainer.innerHTML = `
                 <div class="usage-header">
-                    <span class="usage-label">${usageInfo.icon} ${usageInfo.label}</span>
+                    <span class="usage-label">${usageInfo.icon} ${usageInfo.label} ${cacheIndicator}</span>
                     <span class="usage-percent ${usageInfo.class}">${usageInfo.percent}%</span>
                 </div>
                 <div class="usage-bar">
