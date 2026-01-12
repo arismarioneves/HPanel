@@ -317,7 +317,7 @@
                     const testData = await testResponse.json();
 
                     if (testData.success && testData.data && testData.data.length > 0) {
-                        showAlert('success', `✓ Conectado! ${testData.data.length} servidor(es) encontrado(s).`);
+                        showAlert('success', `Conectado! ${testData.data.length} servidor(es) encontrado(s).`);
                         document.getElementById('jwtInput').value = ''; // Clear for security
                     } else {
                         showAlert('warning', 'Token salvo, mas a conexão falhou. Verifique se o token está correto.');
