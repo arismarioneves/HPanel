@@ -41,6 +41,19 @@
         <!-- Alert container -->
         <div id="alertContainer"></div>
 
+        <!-- Global Search Bar -->
+        <div class="global-search-container">
+            <div class="global-search-box">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" id="globalSearchInput" placeholder="Buscar site em todos os servidores..." autocomplete="off">
+                <span id="searchStatus" class="search-status"></span>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+        </div>
+
         <div class="stats-bar">
             <div class="stat-item">
                 <span class="stat-value" id="totalServers">-</span>
@@ -60,6 +73,10 @@
     </div>
 
     <script>
+        // Global search state
+        let allSitesCache = null;
+        let searchTimeout = null;
+
         document.addEventListener('DOMContentLoaded', async () => {
             // Check if configured
             if (!HostingerConfig.isConfigured()) {
@@ -67,6 +84,9 @@
                 document.getElementById('cardsGrid').innerHTML = '';
                 return;
             }
+
+            // Initialize global search
+            initGlobalSearch();
 
             try {
                 const response = await HostingerConfig.fetch('api/websites.php');
@@ -83,12 +103,154 @@
 
                 // Load usage data in background for each server
                 loadUsageInBackground(data.data);
+
+                // Load sites cache in background for search
+                loadSitesCache();
             } catch (error) {
                 console.error('Error:', error);
                 showAlert('error', 'Erro de conexão. <a href="settings" style="color: inherit; font-weight: 600;">Verificar Configurações</a>');
                 document.getElementById('cardsGrid').innerHTML = '';
             }
         });
+
+        // Global Search Functions
+        function initGlobalSearch() {
+            const searchInput = document.getElementById('globalSearchInput');
+            const searchResults = document.getElementById('searchResults');
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                
+                clearTimeout(searchTimeout);
+                
+                if (query.length < 2) {
+                    searchResults.innerHTML = '';
+                    searchResults.style.display = 'none';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    performSearch(query);
+                }, 200);
+            });
+
+            // Close results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.global-search-container')) {
+                    searchResults.style.display = 'none';
+                }
+            });
+
+            // Focus back shows results
+            searchInput.addEventListener('focus', () => {
+                if (searchInput.value.trim().length >= 2 && searchResults.innerHTML) {
+                    searchResults.style.display = 'block';
+                }
+            });
+        }
+
+        async function loadSitesCache() {
+            const statusEl = document.getElementById('searchStatus');
+            statusEl.innerHTML = '<span class="loading-dots">Carregando sites...</span>';
+
+            try {
+                const response = await HostingerConfig.fetch('api/sites-cache.php');
+                const data = await response.json();
+
+                if (data.success) {
+                    allSitesCache = data.sites;
+                    const cacheInfo = data.fromCache ? `<span title="Cache de ${data.cacheAge}">&#9889;</span> ` : '';
+                    statusEl.innerHTML = `${cacheInfo}${data.total} sites`;
+                } else {
+                    statusEl.innerHTML = '<span class="error-text">Erro ao carregar</span>';
+                }
+            } catch (error) {
+                console.error('Error loading sites cache:', error);
+                statusEl.innerHTML = '<span class="error-text">Erro</span>';
+            }
+        }
+
+        function performSearch(query) {
+            const searchResults = document.getElementById('searchResults');
+            
+            if (!allSitesCache) {
+                searchResults.innerHTML = '<div class="search-result-item loading">Carregando dados...</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+
+            const queryLower = query.toLowerCase();
+            const results = allSitesCache.filter(site => 
+                site.domain.toLowerCase().includes(queryLower)
+            ).slice(0, 10); // Limit to 10 results
+
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item no-results">Nenhum site encontrado</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+
+            searchResults.innerHTML = results.map(site => {
+                const typeIcon = site.type === 'wordpress' ? '<span class="site-type-icon wp">WP</span>' : '';
+                const vhostBadge = getVhostBadge(site.vhostType);
+                const hostingerUrl = `https://hpanel.hostinger.com/websites/${site.domain}`;
+                const siteUrl = `https://${site.domain}`;
+                
+                return `
+                    <div class="search-result-item">
+                        <div class="search-result-info">
+                            <div class="search-result-domain">
+                                ${typeIcon}
+                                <span class="domain-text">${escapeHtml(site.domain)}</span>
+                                ${vhostBadge}
+                            </div>
+                            <div class="search-result-server">
+                                <span class="server-name">${escapeHtml(site.serverTitle)}</span>
+                                <span class="plan-badge">${escapeHtml(site.planName)}</span>
+                            </div>
+                        </div>
+                        <div class="search-result-actions">
+                            <a href="server?orderId=${site.orderId}" class="action-btn" title="Abrir servidor no painel">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                                </svg>
+                            </a>
+                            <a href="${hostingerUrl}" target="_blank" class="action-btn hostinger-btn" title="Abrir na Hostinger">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                                </svg>
+                            </a>
+                            <a href="${siteUrl}" target="_blank" class="action-btn site-btn" title="Visitar site">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            searchResults.style.display = 'block';
+        }
+
+        function getVhostBadge(vhostType) {
+            switch (vhostType) {
+                case 'main':
+                    return '<span class="vhost-badge main">Principal</span>';
+                case 'addon':
+                    return '<span class="vhost-badge addon">Addon</span>';
+                case 'subdomain':
+                    return '<span class="vhost-badge subdomain">Subdomínio</span>';
+                default:
+                    return '';
+            }
+        }
 
         async function loadUsageInBackground(resources) {
             for (const resource of resources) {
