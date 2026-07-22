@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="assets/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="assets/config.js"></script>
+    <script src="assets/ui.js"></script>
 </head>
 
 <body>
@@ -20,13 +21,13 @@
                 <span class="logo-text">Hostinger Dashboard</span>
             </a>
             <div class="header-actions">
-                <a href="<?= APP_BASE ?>" class="btn btn-secondary" title="Início">
+                <a href="<?= APP_BASE ?>" class="btn btn-secondary" data-tooltip="Início" data-tooltip-position="bottom" aria-label="Início">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                 </a>
-                <a href="settings" class="btn btn-primary" title="Configurações">
+                <a href="settings" class="btn btn-primary" data-tooltip="Configurações" data-tooltip-position="bottom" aria-label="Configurações">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -499,7 +500,7 @@
                             <?php if ($hasSubdomains): ?>
                                 <button class="btn btn-secondary btn-icon toggle-subdomains"
                                     onclick="toggleSubdomains(this)"
-                                    title="Ver subdomínios">
+                                    data-tooltip="Ver subdomínios" aria-label="Ver subdomínios">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -507,7 +508,7 @@
                             <?php endif; ?>
                             <button class="btn btn-secondary btn-icon btn-databases"
                                 onclick="toggleDatabases(this, '<?= htmlspecialchars($site['username']) ?>', '<?= htmlspecialchars($site['domain']) ?>', <?= $orderId ?>)"
-                                title="Bancos de Dados">
+                                data-tooltip="Bancos de Dados" aria-label="Bancos de Dados">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
                                     <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
@@ -516,7 +517,7 @@
                             </button>
                             <button class="btn btn-secondary btn-icon btn-files"
                                 onclick="openFileBrowser('<?= htmlspecialchars($site['username']) ?>', '<?= htmlspecialchars($site['domain']) ?>', <?= $orderId ?>)"
-                                title="Gerenciador de Arquivos">
+                                data-tooltip="Gerenciador de Arquivos" aria-label="Gerenciador de Arquivos">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                                 </svg>
@@ -524,7 +525,7 @@
                             <a href="https://hpanel.hostinger.com/websites/<?= htmlspecialchars($site['domain']) ?>"
                                 target="_blank"
                                 class="btn btn-external btn-icon"
-                                title="Abrir no hPanel">
+                                data-tooltip="Abrir no hPanel" data-tooltip-position="left" aria-label="Abrir no hPanel">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                     <polyline points="15 3 21 3 21 9"></polyline>
@@ -535,7 +536,7 @@
                             <div class="dropdown-menu-wrapper">
                                 <button class="btn btn-secondary btn-icon btn-more"
                                     onclick="toggleDropdownMenu(this)"
-                                    title="Mais opções">
+                                    data-tooltip="Mais opções" data-tooltip-position="left" aria-label="Mais opções">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <circle cx="12" cy="12" r="1"></circle>
                                         <circle cx="19" cy="12" r="1"></circle>
@@ -648,11 +649,11 @@
                 if (data.success && data.link) {
                     window.open(data.link, '_blank');
                 } else {
-                    alert('Erro ao obter link do gerenciador de arquivos');
+                    UI.alert('Erro ao obter link do gerenciador de arquivos', { variant: 'danger', title: 'Erro' });
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Erro ao conectar com o servidor');
+                UI.alert('Erro ao conectar com o servidor', { variant: 'danger', title: 'Erro' });
             } finally {
                 button.innerHTML = originalContent;
                 button.disabled = false;
@@ -701,7 +702,7 @@
                                         </span>
                                         <span class="database-meta"></span>
                                     </div>
-                                    <button class="btn btn-primary btn-icon btn-phpmyadmin" title="Abrir phpMyAdmin">
+                                    <button class="btn btn-primary btn-icon btn-phpmyadmin" data-tooltip="Abrir phpMyAdmin" data-tooltip-position="left" aria-label="Abrir phpMyAdmin">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                             <polyline points="15 3 21 3 21 9"></polyline>
@@ -745,11 +746,11 @@
                 if (data.success && data.link) {
                     window.open(data.link, '_blank');
                 } else {
-                    alert('Erro ao obter link do phpMyAdmin');
+                    UI.alert('Erro ao obter link do phpMyAdmin', { variant: 'danger', title: 'Erro' });
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Erro ao conectar com o servidor');
+                UI.alert('Erro ao conectar com o servidor', { variant: 'danger', title: 'Erro' });
             } finally {
                 button.innerHTML = originalContent;
                 button.disabled = false;
@@ -1235,7 +1236,7 @@
             const version = select.value;
 
             if (!version) {
-                alert('Selecione uma versão');
+                await UI.alert('Selecione uma versão', { variant: 'warning' });
                 return;
             }
 
@@ -1254,13 +1255,13 @@
                 });
 
                 // API doesn't return success response, so always show success
-                alert(`Solicitação para alterar PHP para versão ${version} enviada com sucesso!`);
                 closePhpVersionModal();
+                UI.alert(`Solicitação para alterar PHP para versão ${version} enviada com sucesso!`, { variant: 'success', title: 'Pronto' });
             } catch (error) {
                 console.error('Error:', error);
                 // Still show success since the request was sent
-                alert(`Solicitação para alterar PHP para versão ${version} enviada!`);
                 closePhpVersionModal();
+                UI.alert(`Solicitação para alterar PHP para versão ${version} enviada!`, { variant: 'success', title: 'Pronto' });
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Salvar';
@@ -1344,10 +1345,14 @@
         }
 
         async function recreateSshKey() {
-            const ok = confirm(
-                'Recriar a chave SSH?\n\n' +
+            const ok = await UI.confirm(
                 'A chave atual deixará de funcionar imediatamente. Deploys via Git que usam a chave antiga ' +
-                'falharão até você cadastrar a nova chave pública no repositório remoto (GitHub, GitLab etc).'
+                'falharão até você cadastrar a nova chave pública no repositório remoto (GitHub, GitLab etc).',
+                {
+                    title: 'Recriar a chave SSH?',
+                    variant: 'danger',
+                    okLabel: 'Recriar'
+                }
             );
             if (!ok) return;
 
@@ -1378,7 +1383,7 @@
                 button.textContent = 'Copiado!';
                 setTimeout(() => { button.textContent = original; }, 2000);
             }).catch(() => {
-                alert('Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.');
+                UI.alert('Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.', { variant: 'warning' });
             });
         }
     </script>

@@ -1466,3 +1466,104 @@ body::before {
     background: var(--accent);
     border-color: var(--accent);
 }
+
+/* =============================================
+   Shared Dialog (UI.alert / UI.confirm)
+   ============================================= */
+
+.ui-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+    padding: var(--spacing-md);
+}
+
+.ui-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ui-modal {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    max-width: 440px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-20px) scale(0.98);
+    transition: transform var(--transition-normal);
+}
+
+.ui-modal-overlay.active .ui-modal {
+    transform: translateY(0) scale(1);
+}
+
+.ui-modal-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.ui-modal-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ui-modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Cor do ícone conforme a variante */
+.ui-modal-info .ui-modal-icon {
+    color: var(--accent);
+}
+
+.ui-modal-success .ui-modal-icon {
+    color: var(--success);
+}
+
+.ui-modal-warning .ui-modal-icon {
+    color: var(--warning);
+}
+
+.ui-modal-danger .ui-modal-icon {
+    color: var(--danger);
+}
+
+.ui-modal-message {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    white-space: pre-line;
+    margin-bottom: var(--spacing-lg);
+}
+
+.ui-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+}
+
+.ui-modal-footer .btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--danger);
+}
+
+.ui-modal-footer .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.5);
+}
