@@ -12,11 +12,13 @@ O Hostinger Dashboard oferece uma interface simplificada para gerenciar todos os
 ### ✨ Funcionalidades
 
 - **📊 Visão geral de servidores** - Lista todos os planos de hospedagem com estatísticas de uso
+- **🔎 Busca global** - Encontra um site em todos os servidores a partir da página inicial
 - **🌐 Gerenciamento de websites** - Visualize todos os domínios, subdomínios e addons
 - **📁 Acesso rápido ao Gerenciador de Arquivos** - Link direto para cada domínio
 - **🗄️ Bancos de dados** - Lista bancos de dados com acesso ao phpMyAdmin
 - **🐘 Versão PHP** - Altere a versão PHP de qualquer domínio
-- **📈 Estatísticas de uso** - Disco, inodes, RAM, CPU em tempo real
+- **🔑 Chave SSH (Git)** - Veja, crie ou recrie a chave SSH de deploy de cada servidor
+- **📈 Estatísticas de uso** - Disco, inodes, RAM, CPU (com cache de 1h para reduzir chamadas)
 
 ---
 
@@ -73,17 +75,24 @@ git clone https://github.com/seu-usuario/Hostinger-Dashboard.git
 cd Hostinger-Dashboard
 ```
 
-2. **Crie a pasta de cookies** (se não existir):
+2. **Configure o caminho base** (apenas se o painel não estiver na raiz do domínio):
+```bash
+cp config.exemplo.php config.php
+# edite 'base' => '/hpanel/' para a subpasta onde o painel está instalado
+```
+O `config.php` é local e não é versionado. Sem ele, a aplicação assume a raiz do domínio (`/`).
+
+3. **Crie a pasta de cookies** (se não existir):
 ```bash
 mkdir cookies
 ```
 
-3. **Acesse o dashboard** no navegador:
+4. **Acesse o dashboard** no navegador:
 ```
 http://localhost/Hostinger-Dashboard/
 ```
 
-4. **Configure o token JWT** na página de Configurações.
+5. **Configure o token JWT** na página de Configurações.
 
 ---
 
@@ -111,29 +120,47 @@ eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3Mzc...
 
 ---
 
+## 🔑 Chave SSH (Git)
+
+Na página de cada servidor há a seção **Chave SSH (Git)**, que gerencia a chave pública usada nos deploys via Git da conta:
+
+- **Ver** - Exibe a chave pública atual (com botão de copiar)
+- **Criar** - Gera o par de chaves quando a conta ainda não tem
+- **Recriar** - Remove a chave atual e gera uma nova (a antiga deixa de funcionar)
+
+> ⚠️ Nem todo servidor usa SSH para deploy — alguns usam GitHub App. Ao **criar** uma chave SSH, o próprio hPanel volta a exibir a interface de deploy via SSH para os sites daquela conta.
+
+---
+
 ## 📁 Estrutura do Projeto
 
 ```
 Hostinger-Dashboard/
-├── index.php           # Página principal (lista servidores)
-├── server.php          # Detalhes do servidor e websites
+├── index.php           # Página principal (lista servidores + busca global)
+├── server.php          # Detalhes do servidor, websites e chave SSH
 ├── settings.php        # Configurações (token JWT)
-├── cookies/            # Arquivos de sessão (JSON)
+├── bootstrap.php       # Resolve o caminho base (APP_BASE) via config.php
+├── config.exemplo.php  # Modelo de configuração local (copiar para config.php)
+├── cookies/            # Arquivos de sessão e cache (JSON)
 ├── assets/
 │   ├── style.css       # Estilos do dashboard
 │   └── config.js       # Gerenciamento de sessão
 └── api/
-    ├── config.php          # Funções de configuração
+    ├── config.php          # Funções de configuração/sessão
     ├── save-config.php     # Salvar token
-    ├── jwt-status.php      # Status do token
+    ├── jwt-status.php      # Status do token (expiração)
     ├── HostingerClient.php # Cliente da API Hostinger
     ├── websites.php        # Endpoint: listar servidores
     ├── server.php          # Endpoint: detalhes do servidor
+    ├── server-usage.php    # Endpoint: uso do servidor (com cache)
+    ├── usage-cache.php     # Cache de uso (1h)
+    ├── sites-cache.php     # Cache de sites para a busca global (1h)
     ├── databases.php       # Endpoint: listar bancos
     ├── phpmyadmin.php      # Endpoint: link phpMyAdmin
     ├── file-browser.php    # Endpoint: link gerenciador de arquivos
     ├── php-version.php     # Endpoint: versão PHP
-    └── set-php-version.php # Endpoint: alterar versão PHP
+    ├── set-php-version.php # Endpoint: alterar versão PHP
+    └── ssh-key.php         # Endpoint: chave SSH Git (ver/criar/remover)
 ```
 
 ---
@@ -154,15 +181,18 @@ Hostinger-Dashboard/
 
 O dashboard usa APIs internas do hPanel (não oficiais):
 
-- `/api/wh-api/api/hapi/v1/orders/websites` - Lista servidores
+- `/api/wh-api/api/hapi/v1/orders/websites` - Lista servidores (paginado)
+- `/api/rest-hosting/v3/account` - Detalhes e uso da conta
 - `/api/wh-api/api/hapi/v1/accounts/{username}/databases` - Lista bancos
 - `/api/wh-api/api/hapi/v1/accounts/{username}/vhosts/{domain}/php/version` - Versão PHP
+- `/api/wh-api/api/hapi/v1/accounts/{username}/git-key` - Chave SSH de Git (GET/POST/DELETE)
 
 ### Limitações
 
 - As APIs podem mudar sem aviso (são internas)
 - Tokens JWT expiram após ~1 hora
 - Algumas ações podem falhar se o token for antigo
+- O DELETE da chave SSH não é documentado pelo hPanel; se a API rejeitar, a mensagem de erro é exibida e a chave permanece intacta
 
 ---
 
