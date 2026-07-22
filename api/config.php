@@ -4,7 +4,7 @@
  * Configuration Management
  * Handles reading and writing of session files in cookies/ folder
  * Each user has a unique session file identified by a hash stored in localStorage
- * 
+ *
  * New simplified format:
  * {
  *     "token": "JWT token",

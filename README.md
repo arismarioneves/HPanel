@@ -28,7 +28,7 @@ O dashboard utiliza o **token JWT** do hPanel da Hostinger para autenticação. 
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Seu Navegador │────▶│  hPanel Hostinger│────▶│    Dashboard    │
+│   Seu Navegador │  >  │  hPanel Hostinger│  >  │    Dashboard    │
 │   (Logado)      │     │  (Token JWT)     │     │  (Servidor)     │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
 ```
