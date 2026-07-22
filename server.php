@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="assets/config.js"></script>
     <script src="assets/ui.js"></script>
+    <script src="assets/token-status.js"></script>
 </head>
 
 <body>

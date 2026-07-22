@@ -23,33 +23,20 @@ if (empty($token) || !hasJwtToken($token)) {
     exit;
 }
 
-$parts = explode('.', $token);
+$info = getJwtInfo($token);
 
-if (count($parts) !== 3) {
+if ($info === null) {
     echo json_encode(['success' => false, 'error' => 'Invalid JWT format']);
     exit;
 }
 
-// JWT usa base64url (RFC 7515): converte -_ para +/ antes de decodificar
-$payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
-
-if (!isset($payload['exp'])) {
-    echo json_encode(['success' => false, 'error' => 'JWT has no expiration']);
-    exit;
-}
-
-$now = time();
-$exp = $payload['exp'];
-$minutesLeft = max(0, floor(($exp - $now) / 60));
-$expired = $exp < $now;
-$warning = $minutesLeft < 15 && !$expired;
-
 echo json_encode([
     'success' => true,
+    'autoRenew' => (bool) ($config['autoRenew'] ?? false),
     'status' => [
-        'minutesLeft' => $minutesLeft,
-        'expired' => $expired,
-        'warning' => $warning,
-        'expiresAt' => date('Y-m-d H:i:s', $exp)
+        'minutesLeft' => $info['minutesLeft'],
+        'expired' => $info['expired'],
+        'warning' => $info['warning'],
+        'expiresAt' => $info['expiresAt']
     ]
 ]);

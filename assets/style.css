@@ -1572,3 +1572,81 @@ body::before {
     background: rgba(239, 68, 68, 0.25);
     border-color: rgba(239, 68, 68, 0.5);
 }
+
+/* =============================================
+   Token expiring banner (TokenStatus)
+   ============================================= */
+
+.token-banner {
+    position: fixed;
+    right: var(--spacing-md);
+    bottom: var(--spacing-md);
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    max-width: 380px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-card);
+    border: 1px solid var(--warning);
+    border-left-width: 4px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: all var(--transition-normal);
+}
+
+.token-banner.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.token-banner.token-banner-danger {
+    border-color: var(--danger);
+}
+
+.token-banner-icon {
+    color: var(--warning);
+    flex-shrink: 0;
+}
+
+.token-banner-danger .token-banner-icon {
+    color: var(--danger);
+}
+
+.token-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.token-banner-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.token-banner-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.token-banner-btn {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 480px) {
+    .token-banner {
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        max-width: none;
+    }
+}

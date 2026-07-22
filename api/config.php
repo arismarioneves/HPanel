@@ -76,7 +76,8 @@ function getConfigFromSession(?string $hash = null): array
     return [
         'token' => $data['token'] ?? '',
         'gaid' => $data['gaid'] ?? '',
-        'update' => $data['update'] ?? ''
+        'update' => $data['update'] ?? '',
+        'autoRenew' => $data['autoRenew'] ?? false
     ];
 }
 
@@ -95,9 +96,16 @@ function saveConfigToSession(array $data, ?string $hash = null): array
 
     $filePath = getSessionFilePath($hash);
 
+    // Preserva campos existentes (ex.: autoRenew) que não vieram em $data
+    $existing = [];
+    if (file_exists($filePath)) {
+        $existing = json_decode((string) file_get_contents($filePath), true) ?? [];
+    }
+
     $saveData = [
-        'token' => $data['token'] ?? '',
-        'gaid' => $data['gaid'] ?? '',
+        'token' => $data['token'] ?? ($existing['token'] ?? ''),
+        'gaid' => $data['gaid'] ?? ($existing['gaid'] ?? ''),
+        'autoRenew' => $data['autoRenew'] ?? ($existing['autoRenew'] ?? false),
         'update' => date('Y-m-d H:i:s')
     ];
 
@@ -108,6 +116,66 @@ function saveConfigToSession(array $data, ?string $hash = null): array
     return [
         'success' => $success,
         'hash' => $hash
+    ];
+}
+
+/**
+ * Update only the JWT token of an existing session, preserving other fields.
+ * @param string $hash Session hash
+ * @param string $newToken New JWT
+ * @return bool Success
+ */
+function updateSessionToken(string $hash, string $newToken): bool
+{
+    $result = saveConfigToSession(['token' => $newToken], $hash);
+    return $result['success'];
+}
+
+/**
+ * Enable/disable automatic renewal for a session.
+ * @param string $hash Session hash
+ * @param bool $enabled
+ * @return bool Success
+ */
+function setAutoRenew(string $hash, bool $enabled): bool
+{
+    $result = saveConfigToSession(['autoRenew' => $enabled], $hash);
+    return $result['success'];
+}
+
+/**
+ * Decode a JWT and return expiration info.
+ * @param string $token JWT
+ * @return array|null ['exp','minutesLeft','expired','warning','expiresAt'] or null if invalid
+ */
+function getJwtInfo(string $token): ?array
+{
+    if (empty($token)) {
+        return null;
+    }
+
+    $parts = explode('.', $token);
+    if (count($parts) !== 3) {
+        return null;
+    }
+
+    // base64url -> base64
+    $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+    if (!isset($payload['exp'])) {
+        return null;
+    }
+
+    $now = time();
+    $exp = (int) $payload['exp'];
+    $minutesLeft = (int) max(0, floor(($exp - $now) / 60));
+    $expired = $exp < $now;
+
+    return [
+        'exp' => $exp,
+        'minutesLeft' => $minutesLeft,
+        'expired' => $expired,
+        'warning' => $minutesLeft <= 10 && !$expired,
+        'expiresAt' => date('Y-m-d H:i:s', $exp)
     ];
 }
 

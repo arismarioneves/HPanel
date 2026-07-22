@@ -1,0 +1,12 @@
+# Bloqueia todo acesso web aos arquivos de sessão (contêm o token JWT).
+# A aplicação lê estes arquivos via filesystem (PHP), nunca por HTTP.
+
+<IfModule mod_authz_core.c>
+    # Apache 2.4 / LiteSpeed
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    # Apache 2.2
+    Order allow,deny
+    Deny from all
+</IfModule>

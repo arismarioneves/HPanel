@@ -356,4 +356,75 @@ class HostingerClient
         $endpoint = "/api/wh-api/api/hapi/v1/accounts/{$username}/git-key?gaid={$this->gaid}";
         return $this->httpRequest('DELETE', $endpoint, null, $this->accountHeaders($username, $domain, $orderId));
     }
+
+    /**
+     * Renew the JWT using the sliding-session refresh endpoint.
+     *
+     * The hPanel /auth/refresh endpoint accepts the current (not-yet-expired) jwt
+     * cookie and returns a fresh jwt via Set-Cookie. Confirmed working with the jwt
+     * alone (no separate refresh-token cookie needed).
+     *
+     * @param string $jwt Current, still-valid JWT
+     * @return string|null New JWT, or null on failure (e.g. token already expired -> 401)
+     */
+    public function renewToken(string $jwt): ?string
+    {
+        if ($jwt === '') {
+            return null;
+        }
+
+        $url = $this->baseUrl . '/api/auth/api/external/v1/auth/refresh';
+        $setCookies = [];
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => '',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'accept: application/json;charset=utf-8',
+                'content-type: application/json',
+                'referer: https://hpanel.hostinger.com/',
+                'origin: https://hpanel.hostinger.com',
+                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+            ],
+            CURLOPT_COOKIE => 'jwt=' . $jwt . '; language=pt_BR',
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HEADERFUNCTION => function ($ch, $header) use (&$setCookies) {
+                if (stripos($header, 'set-cookie:') === 0) {
+                    $setCookies[] = trim(substr($header, strlen('set-cookie:')));
+                }
+                return strlen($header);
+            },
+        ]);
+
+        curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            error_log("Hostinger renewToken error: $error");
+            return null;
+        }
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            // 401 tipicamente = token já expirou de vez (precisa recapturar via login)
+            return null;
+        }
+
+        // Extrai o novo jwt do Set-Cookie
+        foreach ($setCookies as $cookie) {
+            if (preg_match('/^jwt=([^;]+)/', $cookie, $m)) {
+                $newJwt = trim($m[1]);
+                if ($newJwt !== '' && strtolower($newJwt) !== 'deleted') {
+                    return $newJwt;
+                }
+            }
+        }
+
+        return null;
+    }
 }
