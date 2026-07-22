@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="assets/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="assets/config.js"></script>
+    <script src="assets/ui.js"></script>
 </head>
 
 <body>
@@ -20,13 +21,13 @@
                 <span class="logo-text">Hostinger Dashboard</span>
             </a>
             <div class="header-actions">
-                <a href="<?= APP_BASE ?>" class="btn btn-secondary" title="Início">
+                <a href="<?= APP_BASE ?>" class="btn btn-secondary" data-tooltip="Início" data-tooltip-position="bottom" aria-label="Início">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                 </a>
-                <a href="settings" class="btn btn-primary" title="Configurações">
+                <a href="settings" class="btn btn-primary" data-tooltip="Configurações" data-tooltip-position="bottom" aria-label="Configurações">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -161,7 +162,7 @@
 
                 if (data.success) {
                     allSitesCache = data.sites;
-                    const cacheInfo = data.fromCache ? `<span title="Cache de ${data.cacheAge}">&#9889;</span> ` : '';
+                    const cacheInfo = data.fromCache ? `<span data-tooltip="Cache de ${escapeHtml(data.cacheAge)}" data-tooltip-position="bottom">&#9889;</span> ` : '';
                     statusEl.innerHTML = `${cacheInfo}${data.total} sites`;
                 } else {
                     statusEl.innerHTML = '<span class="error-text">Erro ao carregar</span>';
@@ -212,21 +213,21 @@
                             </div>
                         </div>
                         <div class="search-result-actions">
-                            <a href="server?orderId=${site.orderId}" class="action-btn" title="Abrir servidor no painel">
+                            <a href="server?orderId=${site.orderId}" class="action-btn" data-tooltip="Abrir servidor no painel" data-tooltip-position="bottom" aria-label="Abrir servidor no painel">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                                     <line x1="8" y1="21" x2="16" y2="21"></line>
                                     <line x1="12" y1="17" x2="12" y2="21"></line>
                                 </svg>
                             </a>
-                            <a href="${hostingerUrl}" target="_blank" class="action-btn hostinger-btn" title="Abrir na Hostinger">
+                            <a href="${hostingerUrl}" target="_blank" class="action-btn hostinger-btn" data-tooltip="Abrir na Hostinger" data-tooltip-position="bottom" aria-label="Abrir na Hostinger">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                     <polyline points="15 3 21 3 21 9"></polyline>
                                     <line x1="10" y1="14" x2="21" y2="3"></line>
                                 </svg>
                             </a>
-                            <a href="${siteUrl}" target="_blank" class="action-btn site-btn" title="Visitar site">
+                            <a href="${siteUrl}" target="_blank" class="action-btn site-btn" data-tooltip="Visitar site" data-tooltip-position="bottom" aria-label="Visitar site">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -290,7 +291,7 @@
                 card.appendChild(usageContainer);
             }
 
-            const cacheIndicator = fromCache ? `<span class="cache-indicator" title="Dados em cache (${cacheAge})">⚡</span>` : '';
+            const cacheIndicator = fromCache ? `<span class="cache-indicator" data-tooltip="Dados em cache (${escapeHtml(cacheAge)})" data-tooltip-position="bottom">⚡</span>` : '';
 
             usageContainer.innerHTML = `
                 <div class="usage-header">
