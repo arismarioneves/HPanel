@@ -60,13 +60,17 @@
             exit;
         }
 
-        // Find the specific server
+        // Find the specific server (page 1 first, then remaining pages)
         $server = null;
         foreach ($websitesData['data']['resources'] ?? [] as $resource) {
             if ($resource['orderId'] == $orderId) {
                 $server = $resource;
                 break;
             }
+        }
+
+        if (!$server) {
+            $server = $client->findServerByOrderId($orderId);
         }
 
         if (!$server) {
@@ -133,14 +137,14 @@
         ];
 
         // Helper function for usage percentage
-        function getUsageClass($percentage)
+        function getUsageClass(float $percentage): string
         {
             if ($percentage < 50) return 'low';
             if ($percentage < 80) return 'medium';
             return 'high';
         }
 
-        function formatBytes($bytes, $precision = 2)
+        function formatBytes(float $bytes, int $precision = 2): string
         {
             $units = ['B', 'KB', 'MB', 'GB', 'TB'];
             $bytes = max($bytes, 0);
@@ -150,7 +154,7 @@
             return round($bytes, $precision) . ' ' . $units[$pow];
         }
 
-        function formatNumber($num)
+        function formatNumber(float $num): string
         {
             if ($num >= 1000000) {
                 return round($num / 1000000, 1) . 'M';
@@ -158,7 +162,7 @@
             if ($num >= 1000) {
                 return round($num / 1000, 1) . 'K';
             }
-            return $num;
+            return (string)$num;
         }
         ?>
 
@@ -349,6 +353,30 @@
                         <span class="info-card-label">Backup</span>
                         <span class="info-card-value"><?= ($account['backup_interval'] ?? 0) == 1 ? 'Diário' : 'A cada ' . ($account['backup_interval'] ?? 'N/A') . ' dias' ?></span>
                     </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($username && $mainDomain): ?>
+            <!-- SSH Key (Git) -->
+            <div class="server-info-section">
+                <h3 class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                    </svg>
+                    Chave SSH (Git)
+                </h3>
+                <div class="ssh-key-section">
+                    <p class="ssh-key-hint">
+                        Chave pública usada para deploy via Git nesta conta (<strong><?= htmlspecialchars($username) ?></strong>).
+                        Ao criar uma chave SSH, o hPanel volta a exibir a interface de deploy via SSH (em vez do GitHub App).
+                    </p>
+                    <button class="btn btn-primary" onclick="openSshKeyModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                        </svg>
+                        Gerenciar chave SSH
+                    </button>
                 </div>
             </div>
         <?php endif; ?>
@@ -669,13 +697,11 @@
                                                 <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
                                                 <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
                                             </svg>
-                                            ${db.name}
+                                            <span class="database-name-text"></span>
                                         </span>
-                                        <span class="database-meta">Usuário: ${db.user || 'N/A'} • Tamanho: ${sizeDisplay}</span>
+                                        <span class="database-meta"></span>
                                     </div>
-                                    <button class="btn btn-primary btn-icon btn-phpmyadmin"
-                                        onclick="openPhpMyAdmin('${username}', '${db.name}', '${domain}', ${orderId}, this)"
-                                        title="Abrir phpMyAdmin">
+                                    <button class="btn btn-primary btn-icon btn-phpmyadmin" title="Abrir phpMyAdmin">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                             <polyline points="15 3 21 3 21 9"></polyline>
@@ -683,6 +709,12 @@
                                         </svg>
                                     </button>
                                 `;
+                                // Dados dinâmicos via textContent/listener (sem interpolação em HTML)
+                                dbItem.querySelector('.database-name-text').textContent = db.name;
+                                dbItem.querySelector('.database-meta').textContent = `Usuário: ${db.user || 'N/A'} • Tamanho: ${sizeDisplay}`;
+                                dbItem.querySelector('.btn-phpmyadmin').addEventListener('click', function() {
+                                    openPhpMyAdmin(username, db.name, domain, orderId, this);
+                                });
                                 list.appendChild(dbItem);
                             });
                         } else {
@@ -965,7 +997,130 @@
             justify-content: flex-end;
             gap: var(--spacing-sm);
         }
+
+        .modal-wide {
+            max-width: 640px;
+        }
+
+        /* SSH Key */
+        .ssh-key-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+
+        .ssh-key-section .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .ssh-key-hint {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            max-width: 640px;
+        }
+
+        .ssh-key-value {
+            background: #1a1a2e;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            color: #e0e0e0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 220px;
+            overflow-y: auto;
+            margin: 0;
+        }
+
+        .ssh-key-status {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .ssh-key-note {
+            font-size: 0.85rem;
+            color: var(--warning);
+            margin-top: var(--spacing-sm);
+        }
+
+        .ssh-key-error {
+            color: var(--danger);
+            font-size: 0.9rem;
+            padding: var(--spacing-sm) 0;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
     </style>
+
+    <!-- SSH Key Modal -->
+    <div id="sshKeyModal" class="modal-overlay">
+        <div class="modal modal-wide">
+            <div class="modal-header">
+                <span class="modal-title">Chave SSH (Git)</span>
+                <button class="modal-close" onclick="closeSshKeyModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-domain"><?= htmlspecialchars($username) ?> • <?= htmlspecialchars($mainDomain) ?></p>
+
+                <div id="sshKeyLoading" class="ssh-key-status" style="display: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <span id="sshKeyLoadingText">Carregando...</span>
+                </div>
+
+                <div id="sshKeyEmpty" style="display: none;">
+                    <div class="ssh-key-status">Nenhuma chave SSH criada para esta conta.</div>
+                    <p class="ssh-key-note">
+                        ⚠️ Ao criar uma chave SSH, o hPanel passa a exibir a interface de deploy via SSH
+                        (em vez do GitHub App) para os sites desta conta.
+                    </p>
+                </div>
+
+                <div id="sshKeyView" style="display: none;">
+                    <pre id="sshKeyValue" class="ssh-key-value"></pre>
+                    <p class="ssh-key-note" style="display: none;" id="sshKeyRecreateNote">
+                        ⚠️ Recriar a chave invalida a chave atual: deploys que usam a chave antiga deixarão de funcionar
+                        até você cadastrar a nova chave no repositório remoto.
+                    </p>
+                </div>
+
+                <div id="sshKeyError" class="ssh-key-error" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSshKeyModal()">Fechar</button>
+                <button class="btn btn-danger" id="sshKeyRecreateBtn" style="display: none;" onclick="recreateSshKey()">Recriar chave</button>
+                <button class="btn btn-secondary" id="sshKeyCopyBtn" style="display: none;" onclick="copySshKey(this)">Copiar</button>
+                <button class="btn btn-primary" id="sshKeyCreateBtn" style="display: none;" onclick="createSshKey()">Criar chave SSH</button>
+            </div>
+        </div>
+    </div>
 
     <!-- PHP Version Modal -->
     <div id="phpVersionModal" class="modal-overlay">
@@ -1110,6 +1265,121 @@
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Salvar';
             }
+        }
+
+        // ===== SSH Key (Git) =====
+        const sshKeyCtx = {
+            username: '<?= htmlspecialchars($username) ?>',
+            domain: '<?= htmlspecialchars($mainDomain) ?>',
+            orderId: <?= $orderId ?>
+        };
+
+        function openSshKeyModal() {
+            document.getElementById('sshKeyModal').classList.add('active');
+            loadSshKey();
+        }
+
+        function closeSshKeyModal() {
+            document.getElementById('sshKeyModal').classList.remove('active');
+        }
+
+        function sshKeySetState(state, message = '') {
+            const el = id => document.getElementById(id);
+            el('sshKeyLoading').style.display = state === 'loading' ? 'flex' : 'none';
+            el('sshKeyEmpty').style.display = state === 'empty' ? 'block' : 'none';
+            el('sshKeyView').style.display = state === 'view' ? 'block' : 'none';
+            el('sshKeyError').style.display = state === 'error' ? 'block' : 'none';
+            el('sshKeyRecreateNote').style.display = state === 'view' ? 'block' : 'none';
+            el('sshKeyCreateBtn').style.display = state === 'empty' ? 'inline-block' : 'none';
+            el('sshKeyCopyBtn').style.display = state === 'view' ? 'inline-block' : 'none';
+            el('sshKeyRecreateBtn').style.display = state === 'view' ? 'inline-block' : 'none';
+            if (state === 'error') el('sshKeyError').textContent = message;
+            if (state === 'loading') el('sshKeyLoadingText').textContent = message || 'Carregando...';
+        }
+
+        async function loadSshKey() {
+            sshKeySetState('loading');
+            try {
+                const response = await HostingerConfig.fetch(`api/ssh-key.php?username=${encodeURIComponent(sshKeyCtx.username)}&domain=${encodeURIComponent(sshKeyCtx.domain)}&orderId=${sshKeyCtx.orderId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.publicKey) {
+                        document.getElementById('sshKeyValue').textContent = data.publicKey;
+                        sshKeySetState('view');
+                    } else {
+                        sshKeySetState('empty');
+                    }
+                } else {
+                    sshKeySetState('error', data.error || 'Erro ao consultar a chave SSH. Verifique o token JWT.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                sshKeySetState('error', 'Erro ao conectar com o servidor');
+            }
+        }
+
+        async function createSshKey() {
+            sshKeySetState('loading', 'Criando chave SSH...');
+            try {
+                const response = await HostingerConfig.fetch('api/ssh-key.php', {
+                    method: 'POST',
+                    body: JSON.stringify(sshKeyCtx)
+                });
+                const data = await response.json();
+
+                if (data.success && data.publicKey) {
+                    document.getElementById('sshKeyValue').textContent = data.publicKey;
+                    sshKeySetState('view');
+                } else if (data.errorCode === 9999) {
+                    // Chave já existe — recarrega e exibe a atual
+                    await loadSshKey();
+                } else {
+                    sshKeySetState('error', data.error || 'Erro ao criar a chave SSH');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                sshKeySetState('error', 'Erro ao conectar com o servidor');
+            }
+        }
+
+        async function recreateSshKey() {
+            const ok = confirm(
+                'Recriar a chave SSH?\n\n' +
+                'A chave atual deixará de funcionar imediatamente. Deploys via Git que usam a chave antiga ' +
+                'falharão até você cadastrar a nova chave pública no repositório remoto (GitHub, GitLab etc).'
+            );
+            if (!ok) return;
+
+            sshKeySetState('loading', 'Removendo chave atual...');
+            try {
+                const response = await HostingerConfig.fetch('api/ssh-key.php', {
+                    method: 'DELETE',
+                    body: JSON.stringify(sshKeyCtx)
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    sshKeySetState('error', 'Não foi possível remover a chave atual: ' + (data.error || 'erro desconhecido'));
+                    return;
+                }
+
+                await createSshKey();
+            } catch (error) {
+                console.error('Error:', error);
+                sshKeySetState('error', 'Erro ao conectar com o servidor');
+            }
+        }
+
+        function copySshKey(button) {
+            const key = document.getElementById('sshKeyValue').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                const original = button.textContent;
+                button.textContent = 'Copiado!';
+                setTimeout(() => { button.textContent = original; }, 2000);
+            }).catch(() => {
+                alert('Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.');
+            });
         }
     </script>
 </body>
