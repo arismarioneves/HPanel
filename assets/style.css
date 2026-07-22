@@ -247,6 +247,7 @@ body::before {
     color: inherit;
     display: block;
     backdrop-filter: blur(10px);
+    position: relative;
 }
 
 .server-card:hover {
@@ -254,6 +255,9 @@ body::before {
     border-color: var(--primary);
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg), var(--shadow-glow);
+    /* Eleva o card em hover para o tooltip escapar do card seguinte
+       (backdrop-filter cria stacking context por card) */
+    z-index: 10;
 }
 
 .server-card-header {
@@ -1160,6 +1164,7 @@ body::before {
     box-shadow:
         var(--shadow-lg),
         0 0 20px rgba(103, 61, 230, 0.15);
+    width: max-content;
     max-width: 300px;
     white-space: normal;
     text-align: center;
