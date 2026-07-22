@@ -255,10 +255,11 @@
         }
 
         async function loadUsageInBackground(resources) {
-            for (const resource of resources) {
+            // Requisições em paralelo — cada card atualiza assim que sua resposta chega
+            await Promise.allSettled(resources.map(async (resource) => {
                 // Get main domain and username
                 const mainSite = (resource.websites || []).find(s => s.vhostType === 'main') || resource.websites?.[0];
-                if (!mainSite) continue;
+                if (!mainSite) return;
 
                 try {
                     const url = `api/server-usage.php?orderId=${resource.orderId}&username=${encodeURIComponent(mainSite.username)}&domain=${encodeURIComponent(mainSite.domain)}`;
@@ -271,14 +272,14 @@
                 } catch (error) {
                     console.error(`Error loading usage for ${resource.orderId}:`, error);
                 }
-            }
+            }));
         }
 
         function updateServerUsageBar(orderId, usage, fromCache = false, cacheAge = null) {
             const usageInfo = getHighestUsageFromData(usage);
             if (!usageInfo) return;
 
-            const card = document.querySelector(`a[href="server.php?orderId=${orderId}"]`);
+            const card = document.querySelector(`a[href="server?orderId=${orderId}"]`);
             if (!card) return;
 
             // Find or create usage container - add at the END of card
@@ -399,7 +400,7 @@
                 const planClass = getPlanClass(planName);
 
                 return `
-                    <a href="server.php?orderId=${resource.orderId}" class="server-card">
+                    <a href="server?orderId=${resource.orderId}" class="server-card">
                         <div class="server-card-header">
                             <div>
                                 <h3 class="server-title" data-tooltip="${escapeHtml(resource.title || 'Servidor')}"><span class="server-title-text">${escapeHtml(resource.title || 'Servidor')}</span></h3>

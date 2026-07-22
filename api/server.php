@@ -33,13 +33,17 @@ try {
         exit;
     }
 
-    // Find the specific server
+    // Find the specific server (page 1 first, then remaining pages)
     $server = null;
     foreach ($websitesData['data']['resources'] ?? [] as $resource) {
         if ($resource['orderId'] == $orderId) {
             $server = $resource;
             break;
         }
+    }
+
+    if (!$server) {
+        $server = $client->findServerByOrderId($orderId);
     }
 
     if (!$server) {

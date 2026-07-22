@@ -30,7 +30,8 @@ if (count($parts) !== 3) {
     exit;
 }
 
-$payload = json_decode(base64_decode($parts[1]), true);
+// JWT usa base64url (RFC 7515): converte -_ para +/ antes de decodificar
+$payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
 
 if (!isset($payload['exp'])) {
     echo json_encode(['success' => false, 'error' => 'JWT has no expiration']);
