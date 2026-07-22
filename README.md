@@ -44,7 +44,6 @@ As sessões são armazenadas em arquivos JSON na pasta `cookies/`:
 {
     "token": "eyJ0eXAiOiJKV1Qi...",
     "gaid": "GA1.1.000000000.0000000000",
-    "autoRenew": false,
     "update": "2026-01-07 15:00:00"
 }
 ```
@@ -55,11 +54,10 @@ As sessões são armazenadas em arquivos JSON na pasta `cookies/`:
 |-------|-----------|
 | `token` | Token JWT de autenticação (~1h de validade) |
 | `gaid` | ID do Google Analytics (opcional) |
-| `autoRenew` | Se `true`, o cron renova o token automaticamente |
 | `update` | Data/hora da última atualização |
 
-> ⚠️ O token JWT expira a cada **~1 hora**. Você pode renová-lo em 1 clique ou ativar a
-> **renovação automática** (veja abaixo) para não precisar colar o token de novo.
+> ⚠️ O token JWT expira a cada **~1 hora**, mas é **renovado automaticamente durante a
+> navegação** (veja abaixo). Só é preciso colá-lo de novo se ele expirar de vez.
 
 ---
 
@@ -138,38 +136,26 @@ Na página de cada servidor há a seção **Chave SSH (Git)**, que gerencia a ch
 
 ## 🔄 Renovação do Token
 
-O JWT do hPanel usa **sessão deslizante**: enquanto ele ainda não expirou de vez, o
-endpoint `/auth/refresh` devolve um token novo válido por mais ~1h — usando apenas o
-próprio JWT (nenhum cookie extra é necessário).
+O JWT do hPanel usa **sessão deslizante**: enquanto ainda não expirou de vez, o endpoint
+`/auth/refresh` devolve um token novo válido por mais ~1h — usando apenas o próprio JWT
+(nenhum cookie extra é necessário).
 
-### Renovar em 1 clique
+### Renovação automática na navegação
 
-Quando faltarem **≤ 10 min** para o token vencer (ou se ele já venceu), aparece um
-**banner** no canto inferior direito com o botão **Renovar agora**. A página de
-Configurações também tem o botão, junto ao status do token.
+Ao entrar em qualquer página, o dashboard verifica a sessão e, se o token estiver
+expirado ou perto de expirar (≤ 15 min), **renova em segundo plano, sem qualquer aviso**.
+Há um *throttle* de alguns minutos entre verificações para não checar a cada clique.
+Assim, enquanto você usa o painel, o token se mantém sozinho — sem cron, sem copiar de novo.
 
-### Renovação automática (opcional, via cron)
+### Renovar / sair (página de Configurações)
 
-Na página de Configurações, ative **Renovação automática**. Com isso, um cron mantém o
-token da sua sessão sempre fresco, sem precisar colar o JWT de novo.
+Os controles ficam **apenas na página de Configurações**:
 
-1. **Defina uma chave secreta** no `config.php`:
-```php
-'cron_secret' => 'uma-chave-forte-aleatoria',
-```
+- **Renovar agora** - renova o token na hora (útil se você ficou tempo sem navegar).
+- **Limpar Sessão** - encerra a sessão (logout), removendo o token do servidor.
 
-2. **Agende um gatilho** que chame esta URL a cada ~30 minutos:
-```
-https://SEU-HOST/hpanel/cron/renew-tokens?key=uma-chave-forte-aleatoria
-```
-(no hPanel: **Avançado → Cron Jobs**, ou qualquer serviço de "ping"/uptime que faça GET periódico)
-
-3. **Ative o toggle** em Configurações para cada sessão que deve ser renovada.
-
-> ⚠️ **Segurança:** com a renovação automática ligada, o servidor mantém sua sessão
-> Hostinger viva e guarda o token em `cookies/`. Use apenas em host protegido. Se o token
-> ficar sem renovar por muito tempo e expirar de vez, o refresh falha (401) e é preciso
-> recolar o JWT via login.
+> ⚠️ Se o token ficar sem renovar por muito tempo e **expirar de vez**, o refresh falha e
+> é preciso **colar o JWT novamente** na página de Configurações.
 
 ---
 
@@ -184,19 +170,16 @@ Hostinger-Dashboard/
 ├── config.exemplo.php  # Modelo de configuração local (copiar para config.php)
 ├── cookies/            # Arquivos de sessão e cache (JSON)
 │   └── .htaccess       # Bloqueia acesso web aos arquivos de sessão
-├── cron/
-│   └── renew-tokens.php # Cron de renovação automática (acionável por URL)
 ├── assets/
 │   ├── style.css        # Estilos do dashboard
 │   ├── config.js        # Gerenciamento de sessão
 │   ├── ui.js            # Diálogos compartilhados (UI.alert / UI.confirm)
-│   └── token-status.js  # Banner de expiração + renovar em 1 clique
+│   └── token-status.js  # Auto-renovação silenciosa do token na navegação
 └── api/
     ├── config.php          # Funções de configuração/sessão
     ├── save-config.php     # Salvar token
     ├── jwt-status.php      # Status do token (expiração)
-    ├── renew-token.php     # Renovar o token da sessão (1 clique)
-    ├── set-auto-renew.php  # Ligar/desligar renovação automática
+    ├── renew-token.php     # Renovar o token da sessão
     ├── HostingerClient.php # Cliente da API Hostinger
     ├── websites.php        # Endpoint: listar servidores
     ├── server.php          # Endpoint: detalhes do servidor
@@ -219,8 +202,7 @@ Hostinger-Dashboard/
 - A pasta `cookies/` tem um `.htaccess` que bloqueia acesso web aos arquivos de sessão
 - Hash único identifica cada sessão (salvo no localStorage do navegador)
 - Dados não são enviados para nenhum servidor externo
-- O cron de renovação é protegido por `cron_secret` (definido no `config.php`)
-- Com a renovação automática ligada, o servidor mantém a sessão viva — use em host protegido
+- A renovação do token acontece no próprio navegador durante a navegação (sem cron/serviço externo)
 - Recomenda-se usar em ambiente local ou protegido
 
 ---

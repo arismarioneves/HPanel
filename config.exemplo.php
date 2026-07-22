@@ -17,10 +17,4 @@ return [
     //   Raiz do domínio ....... '/'          ->  https://seudominio.com/
     //   Subpasta .............. '/hpanel/'    ->  https://seudominio.com/hpanel/
     'base' => '/hpanel/',
-
-    // Chave secreta do cron de renovação automática de tokens.
-    // O gatilho externo deve chamar a URL a cada ~30 min:
-    //   https://seudominio.com/hpanel/cron/renew-tokens?key=SUA_CHAVE
-    // Gere uma chave forte (ex.: bin2hex(random_bytes(24))). Vazio = cron desabilitado.
-    'cron_secret' => '',
 ];

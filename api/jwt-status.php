@@ -32,7 +32,6 @@ if ($info === null) {
 
 echo json_encode([
     'success' => true,
-    'autoRenew' => (bool) ($config['autoRenew'] ?? false),
     'status' => [
         'minutesLeft' => $info['minutesLeft'],
         'expired' => $info['expired'],

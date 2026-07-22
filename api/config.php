@@ -76,8 +76,7 @@ function getConfigFromSession(?string $hash = null): array
     return [
         'token' => $data['token'] ?? '',
         'gaid' => $data['gaid'] ?? '',
-        'update' => $data['update'] ?? '',
-        'autoRenew' => $data['autoRenew'] ?? false
+        'update' => $data['update'] ?? ''
     ];
 }
 
@@ -96,7 +95,7 @@ function saveConfigToSession(array $data, ?string $hash = null): array
 
     $filePath = getSessionFilePath($hash);
 
-    // Preserva campos existentes (ex.: autoRenew) que não vieram em $data
+    // Preserva campos existentes (ex.: gaid) que não vieram em $data
     $existing = [];
     if (file_exists($filePath)) {
         $existing = json_decode((string) file_get_contents($filePath), true) ?? [];
@@ -105,7 +104,6 @@ function saveConfigToSession(array $data, ?string $hash = null): array
     $saveData = [
         'token' => $data['token'] ?? ($existing['token'] ?? ''),
         'gaid' => $data['gaid'] ?? ($existing['gaid'] ?? ''),
-        'autoRenew' => $data['autoRenew'] ?? ($existing['autoRenew'] ?? false),
         'update' => date('Y-m-d H:i:s')
     ];
 
@@ -128,18 +126,6 @@ function saveConfigToSession(array $data, ?string $hash = null): array
 function updateSessionToken(string $hash, string $newToken): bool
 {
     $result = saveConfigToSession(['token' => $newToken], $hash);
-    return $result['success'];
-}
-
-/**
- * Enable/disable automatic renewal for a session.
- * @param string $hash Session hash
- * @param bool $enabled
- * @return bool Success
- */
-function setAutoRenew(string $hash, bool $enabled): bool
-{
-    $result = saveConfigToSession(['autoRenew' => $enabled], $hash);
     return $result['success'];
 }
 

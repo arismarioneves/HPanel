@@ -121,25 +121,10 @@
                 </button>
             </div>
 
-            <!-- Renovação automática -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h4 class="section-label">🔄 Renovação automática</h4>
-                    <label class="switch" title="Renovação automática do token">
-                        <input type="checkbox" id="autoRenewToggle">
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
-                <div class="instructions-box">
-                    <p>Mantém o token renovado automaticamente, sem precisar colar de novo a cada hora.</p>
-                    <p>Requer um gatilho externo chamando esta URL a cada ~30 min:</p>
-                    <code id="cronUrlHint">.../cron/renew-tokens?key=SUA_CHAVE</code>
-                    <p style="margin-top: 8px; color: var(--warning);">
-                        ⚠️ Com isto ligado, o servidor mantém sua sessão Hostinger viva e guarda o token.
-                        Use apenas em host protegido.
-                    </p>
-                </div>
-            </div>
+            <p class="autorenew-note">
+                🔄 O token é renovado automaticamente durante a navegação (sessão deslizante),
+                enquanto não expirar de vez. Se expirar, cole o JWT novamente aqui.
+            </p>
         </div>
     </div>
 
@@ -298,61 +283,14 @@
             font-size: 0.85rem;
         }
 
-        /* Toggle switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
-            cursor: pointer;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .switch-slider {
-            position: absolute;
-            inset: 0;
-            background: var(--bg-tertiary, rgba(255, 255, 255, 0.1));
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            transition: background var(--transition-fast);
-        }
-
-        .switch-slider::before {
-            content: "";
-            position: absolute;
-            height: 16px;
-            width: 16px;
-            left: 3px;
-            bottom: 3px;
-            background: var(--text-secondary);
-            border-radius: 50%;
-            transition: transform var(--transition-fast), background var(--transition-fast);
-        }
-
-        .switch input:checked + .switch-slider {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .switch input:checked + .switch-slider::before {
-            transform: translateX(20px);
-            background: #fff;
-        }
-
-        .switch input:disabled + .switch-slider {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        #cronUrlHint {
-            display: inline-block;
-            margin-top: 4px;
-            word-break: break-all;
+        .autorenew-note {
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
         }
 
         @media (max-width: 768px) {
@@ -370,14 +308,6 @@
             document.getElementById('saveBtn').addEventListener('click', saveConfig);
             document.getElementById('clearBtn').addEventListener('click', clearConfig);
             document.getElementById('renewBtn').addEventListener('click', renewNow);
-            document.getElementById('autoRenewToggle').addEventListener('change', toggleAutoRenew);
-
-            // Preenche a URL do cron com o caminho real da instalação
-            const cronHint = document.getElementById('cronUrlHint');
-            if (cronHint) {
-                const url = new URL('cron/renew-tokens', document.baseURI);
-                cronHint.textContent = url.href + '?key=SUA_CHAVE';
-            }
         });
 
         async function renewNow() {
@@ -392,7 +322,6 @@
 
                 if (data.success) {
                     showAlert('success', 'Token renovado com sucesso.');
-                    if (window.TokenStatus) TokenStatus.hide();
                 } else {
                     showAlert('error', data.error || 'Não foi possível renovar o token.');
                 }
@@ -406,32 +335,6 @@
             }
         }
 
-        async function toggleAutoRenew(e) {
-            const toggle = e.target;
-            const enabled = toggle.checked;
-            toggle.disabled = true;
-
-            try {
-                const res = await HostingerConfig.fetch('api/set-auto-renew.php', {
-                    method: 'POST',
-                    body: JSON.stringify({ enabled })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    showAlert('success', enabled ? 'Renovação automática ativada.' : 'Renovação automática desativada.');
-                } else {
-                    toggle.checked = !enabled; // reverte
-                    showAlert('error', data.error || 'Não foi possível alterar a renovação automática.');
-                }
-            } catch (err) {
-                console.error(err);
-                toggle.checked = !enabled; // reverte
-                showAlert('error', 'Erro ao alterar a renovação automática.');
-            } finally {
-                toggle.disabled = false;
-            }
-        }
 
         async function saveConfig() {
             const btn = document.getElementById('saveBtn');
@@ -510,7 +413,6 @@
             const hpanelLink = document.getElementById('hpanelLink');
 
             const renewBtn = document.getElementById('renewBtn');
-            const autoRenewToggle = document.getElementById('autoRenewToggle');
 
             const hash = HostingerConfig.getHash();
 
@@ -520,8 +422,6 @@
                 sessionInfo.textContent = '';
                 tokenStatus.style.display = 'none';
                 renewBtn.style.display = 'none';
-                autoRenewToggle.checked = false;
-                autoRenewToggle.disabled = true;
                 return;
             }
 
@@ -531,10 +431,6 @@
 
             // Check JWT status
             const jwtData = await HostingerConfig.getJwtStatus();
-
-            // Reflete o estado da renovação automática
-            autoRenewToggle.disabled = false;
-            autoRenewToggle.checked = !!(jwtData && jwtData.autoRenew);
 
             if (jwtData && jwtData.success && jwtData.status) {
                 const jwt = jwtData.status;

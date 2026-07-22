@@ -1,107 +1,54 @@
 /**
- * TokenStatus - Indicador de expiração do token JWT (compartilhado)
+ * TokenAutoRenew - Renovação silenciosa do JWT na navegação.
  *
- * Mostra um banner fixo APENAS quando o token está vencendo (<= 10 min) ou expirado,
- * com botão de renovar em 1 clique. Depende de HostingerConfig (config.js) e UI (ui.js).
+ * Ao carregar qualquer página (com throttle de alguns minutos), verifica a sessão:
+ * se o token estiver expirado ou perto de expirar, tenta renovar em segundo plano
+ * usando a sessão deslizante do hPanel (/auth/refresh via api/renew-token.php).
+ *
+ * Sem UI: o aviso e os controles (renovar/sair) ficam apenas na página de Configurações.
+ * Se o token estiver morto de vez, a renovação falha e as páginas mostram o aviso
+ * padrão para reconfigurar o token.
+ *
+ * Depende de HostingerConfig (config.js).
  */
 
-const TokenStatus = (() => {
-    const CHECK_INTERVAL_MS = 5 * 60 * 1000; // revalida a cada 5 min
-    const THRESHOLD_MIN = 10;                // banner aparece faltando <= 10 min
-    let el = null;
+const TokenAutoRenew = (() => {
+    const THROTTLE_MS = 5 * 60 * 1000;   // no máx. 1 verificação a cada 5 min (entre navegações)
+    const RENEW_THRESHOLD_MIN = 15;      // renova se faltar <= 15 min (ou já expirado)
+    const LAST_CHECK_KEY = 'hostinger_token_lastcheck';
 
-    function ensureDom() {
-        if (el) return;
-        el = document.createElement('div');
-        el.className = 'token-banner';
-        el.innerHTML = `
-            <svg class="token-banner-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <div class="token-banner-text">
-                <span class="token-banner-title"></span>
-                <span class="token-banner-sub"></span>
-            </div>
-            <button class="btn btn-primary token-banner-btn" type="button">Renovar agora</button>
-        `;
-        document.body.appendChild(el);
-        el.querySelector('.token-banner-btn').addEventListener('click', renew);
-    }
-
-    function show(minutesLeft, expired) {
-        ensureDom();
-        const title = el.querySelector('.token-banner-title');
-        const sub = el.querySelector('.token-banner-sub');
-
-        if (expired) {
-            el.classList.add('token-banner-danger');
-            title.textContent = 'Token expirado';
-            sub.textContent = 'Renove ou reconfigure o token JWT.';
-        } else {
-            el.classList.toggle('token-banner-danger', minutesLeft <= 3);
-            title.textContent = `Token expira em ${minutesLeft} min`;
-            sub.textContent = 'Renove para não perder a sessão.';
-        }
-        el.classList.add('visible');
-    }
-
-    function hide() {
-        if (el) el.classList.remove('visible');
-    }
-
-    async function check() {
+    /**
+     * Verifica e, se necessário, renova o token.
+     * @param {boolean} force Ignora o throttle (usado por chamadas explícitas)
+     * @returns {Promise<void>}
+     */
+    async function maybeRenew(force = false) {
         if (!window.HostingerConfig || !HostingerConfig.isConfigured()) return;
+
+        // Throttle entre navegações (persistido no localStorage)
+        if (!force) {
+            const last = parseInt(localStorage.getItem(LAST_CHECK_KEY) || '0', 10);
+            if (Date.now() - last < THROTTLE_MS) return;
+        }
+        localStorage.setItem(LAST_CHECK_KEY, String(Date.now()));
+
         try {
             const res = await HostingerConfig.fetch('api/jwt-status.php');
             const data = await res.json();
-            if (data.success && data.status) {
-                const { minutesLeft, expired } = data.status;
-                if (expired || minutesLeft <= THRESHOLD_MIN) {
-                    show(minutesLeft, expired);
-                } else {
-                    hide();
-                }
+            if (!data.success || !data.status) return;
+
+            const { minutesLeft, expired } = data.status;
+            if (expired || minutesLeft <= RENEW_THRESHOLD_MIN) {
+                // Renovação silenciosa — a página usa o token atualizado na próxima navegação
+                await HostingerConfig.fetch('api/renew-token.php', { method: 'POST' });
             }
         } catch (e) {
-            console.error('token-status:', e);
-        }
-    }
-
-    async function renew() {
-        ensureDom();
-        const btn = el.querySelector('.token-banner-btn');
-        const original = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = 'Renovando...';
-
-        try {
-            const res = await HostingerConfig.fetch('api/renew-token.php', { method: 'POST' });
-            const data = await res.json();
-
-            if (data.success && data.status) {
-                if (data.status.minutesLeft > THRESHOLD_MIN) {
-                    hide();
-                } else {
-                    show(data.status.minutesLeft, data.status.expired);
-                }
-                if (window.UI) UI.alert(`Token renovado. Válido por ${data.status.minutesLeft} min.`, { variant: 'success', title: 'Pronto' });
-            } else {
-                const msg = data.error || 'Não foi possível renovar o token.';
-                if (window.UI) UI.alert(msg, { variant: 'danger', title: 'Erro' });
-            }
-        } catch (e) {
-            console.error('token-status renew:', e);
-            if (window.UI) UI.alert('Erro ao renovar o token.', { variant: 'danger', title: 'Erro' });
-        } finally {
-            btn.disabled = false;
-            btn.textContent = original;
+            console.error('token auto-renew:', e);
         }
     }
 
     function init() {
-        check();
-        setInterval(check, CHECK_INTERVAL_MS);
+        maybeRenew();
     }
 
     if (document.readyState === 'loading') {
@@ -110,9 +57,9 @@ const TokenStatus = (() => {
         init();
     }
 
-    return { check, renew, hide };
+    return { maybeRenew };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = TokenStatus;
+    module.exports = TokenAutoRenew;
 }
