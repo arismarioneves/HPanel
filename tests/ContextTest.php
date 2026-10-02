@@ -30,6 +30,33 @@ final class ContextTest extends TestCase
         @rmdir($this->dir);
     }
 
+    public function testFailedRenewalHitsUpstreamOncePerRequest(): void
+    {
+        [$ctx, $http] = $this->context(TestJwt::make($this->now - 10), [['status' => 401]]);
+        foreach ([1, 2] as $_) {
+            try {
+                $ctx->freshToken();
+                self::fail('esperava session_expired');
+            } catch (\HPanel\ApiError $e) {
+                self::assertSame('session_expired', $e->errorCode);
+            }
+        }
+        self::assertCount(1, $http->calls);
+    }
+
+    /** @return array{0: Context, 1: FakeTransport} */
+    private function context(string $token, array $responses): array
+    {
+        $secret = random_bytes(32);
+        $store = new SessionStore($this->dir . '/sessions', $secret);
+        $sid = null;
+        $first = new Session($store, null, '/', false, function (string $n, string $v) use (&$sid): void { $sid = $v; }, fn() => $this->now);
+        $first->start(['token' => $token, 'gaid' => 'g']);
+        $http = new FakeTransport($responses);
+        $session = new Session($store, $sid, '/', false, static function (): void {}, fn() => $this->now);
+        return [new Context(Config::fromArray(['app_secret' => bin2hex($secret)], $this->dir), $session, $http, new RateLimit($this->dir . '/rl', $secret), fn() => $this->now), $http];
+    }
+
     public function testTokenIsRenewedOncePerRequest(): void
     {
         $secret = random_bytes(32);

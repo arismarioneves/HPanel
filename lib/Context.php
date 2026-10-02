@@ -9,6 +9,7 @@ final class Context
     public readonly Catalog $catalog;
     private ?DataSource $source = null;
     private ?string $token = null;
+    private ?ApiError $tokenError = null;
 
     /** @param \Closure(): int $clock */
     public function __construct(
@@ -40,7 +41,14 @@ final class Context
         if (!$this->session->isConnected()) {
             throw ApiError::notConnected();
         }
-        return $this->token = $this->auth()->ensureFresh($this->session, $this->now());
+        if ($this->tokenError !== null) {
+            throw $this->tokenError;
+        }
+        try {
+            return $this->token = $this->auth()->ensureFresh($this->session, $this->now());
+        } catch (ApiError $e) {
+            throw $this->tokenError = $e;
+        }
     }
 
     /** Fonte de dados com token garantidamente fresco (renova se preciso). */
