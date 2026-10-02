@@ -57,6 +57,7 @@ function loadUsage(servers, refresh) {
   return Promise.allSettled(servers.map(async (s) => {
     const box = grid.querySelector(`[data-order="${CSS.escape(String(s.orderId))}"] [data-meters]`);
     if (!box) return;
+    if (!(s.websites || []).length) { clear(box).append(h('span', { class: 'muted small' }, 'Sem sites ainda')); return; }
     try {
       const { usage } = await get('usage', refresh ? { orderId: s.orderId, refresh: 1 } : { orderId: s.orderId });
       const meters = [['storage', 'Disco', 'mb'], ['inodes', 'Inodes', 'n']]
