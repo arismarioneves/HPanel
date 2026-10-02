@@ -43,14 +43,16 @@ function render(servers, cachedAt) {
 
 function card(s) {
   const count = (s.websites || []).length;
+  const title = s.title || 'Servidor';
   return h('a', { class: 'card server-card', href: `server?orderId=${encodeURIComponent(s.orderId)}`, dataset: { order: String(s.orderId) } },
-    h('div', { class: 'card-head' },
-      h('h3', { class: 'card-title', title: s.title || 'Servidor' }, s.title || 'Servidor'),
-      badge(s.planDisplayableName || s.planName || 'Plano', 'accent')),
-    h('dl', { class: 'meta' },
-      h('div', {}, h('dt', {}, 'Sites'), h('dd', {}, String(count))),
-      h('div', {}, h('dt', {}, 'Datacenter'), h('dd', {}, s.datacenter?.title || '—'))),
-    h('div', { class: 'meters', dataset: { meters: '' } }, h('div', { class: 'skeleton skeleton-line' }), h('div', { class: 'skeleton skeleton-line' })));
+    h('h3', { class: 'card-title', title }, title),
+    h('div', { class: 'card-sub' },
+      badge(s.planDisplayableName || s.planName || 'Plano', 'accent'),
+      s.datacenter?.title ? h('span', { class: 'card-sub-text', title: s.datacenter.title }, s.datacenter.title) : null),
+    h('div', { class: 'meters', dataset: { meters: '' } }, h('div', { class: 'skeleton skeleton-line' }), h('div', { class: 'skeleton skeleton-line' })),
+    h('div', { class: 'card-foot' },
+      h('span', {}, icon('globe'), `${count} ${count === 1 ? 'site' : 'sites'}`),
+      s.server?.hostname ? h('span', { class: 'mono', title: 'Hostname' }, s.server.hostname) : null));
 }
 
 function loadUsage(servers, refresh) {

@@ -35,6 +35,7 @@ function highlightTab() {
     $(`[data-tab="${t}"]`).setAttribute('aria-selected', String(t === tab));
     panel(t).hidden = t !== tab;
   }
+  $(`[data-tab="${tab}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest' });
   return tab;
 }
 
