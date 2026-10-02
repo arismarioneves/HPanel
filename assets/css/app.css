@@ -64,12 +64,27 @@ main:focus { outline: none; }
 .container.narrow { width: min(640px, 100% - 2 * var(--s4)); padding-block: var(--s7); }
 main.container { padding-block: var(--s5) var(--s7); }
 .topbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: saturate(1.4) blur(8px); border-bottom: 1px solid var(--border); }
-.topbar-inner { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.topbar-inner { position: relative; display: flex; align-items: center; justify-content: space-between; height: 60px; }
 .brand { display: flex; align-items: center; gap: var(--s2); color: var(--text); font-weight: 700; }
 .brand:hover { text-decoration: none; }
 .brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r2); background: var(--accent); color: var(--on-accent); font-weight: 800; }
 .topbar-actions { display: flex; align-items: center; gap: var(--s1); }
 .topbar-cta { margin-left: var(--s2); }
+/* Pill de sessão: o popover se alinha à borda direita do header (cabe em telas estreitas). */
+.session-slot { display: flex; margin-right: var(--s1); }
+.session-slot[hidden] { display: none; }
+.session-pill { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--s3); border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface); color: var(--text); font: 500 .82rem var(--font); cursor: pointer; white-space: nowrap; transition: border-color var(--t-fast), background var(--t-fast); }
+.session-pill:hover, .session-pill[aria-expanded='true'] { border-color: var(--border-strong); background: var(--surface-2); }
+.session-pill[aria-expanded='true']::after { display: none; }
+.session-pill .dot, .session-pop-title .dot { width: 8px; height: 8px; box-shadow: none; flex: none; }
+.session-pill-warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); }
+.session-pill-danger { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); color: var(--danger); }
+.session-pill-short { display: none; }
+.session-pop { position: absolute; top: calc(100% - 4px); right: 0; z-index: 31; width: min(300px, 100%); padding: var(--s4); border: 1px solid var(--border); border-radius: var(--r3); background: var(--surface); box-shadow: var(--shadow); display: grid; gap: var(--s2); font-size: .9rem; }
+.session-pop[hidden] { display: none; }
+.session-pop-title { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
+.session-pop-actions { display: grid; gap: var(--s1); margin-top: var(--s1); }
+.session-pop-actions .btn { justify-content: flex-start; }
 .demo-bar { position: sticky; top: 61px; z-index: 19; background: color-mix(in srgb, var(--warn) 14%, var(--surface)); border-bottom: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border)); font-size: .9rem; }
 .demo-bar-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; padding-block: var(--s2); }
 .demo-bar-inner > span:first-child { display: inline-flex; align-items: center; gap: var(--s2); font-weight: 600; }
@@ -314,6 +329,8 @@ textarea.input { resize: vertical; }
 .dot-ok { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent); }
 .dot-warn { background: var(--warn); }
 .dot-off { background: var(--border-strong); }
+.dot-danger { background: var(--danger); }
+.dot-info { background: var(--info); }
 
 /* ===== Toasts ===== */
 .toasts { position: fixed; right: var(--s4); bottom: var(--s4); z-index: 60; display: grid; gap: var(--s2); width: min(380px, 100% - 2 * var(--s4)); }
@@ -356,6 +373,10 @@ body.is-offline [data-action], body.is-offline .btn-primary { pointer-events: no
   h1 { font-size: 1.35rem; }
   .card { padding: var(--s4); }
   .brand-name { display: none; }
+  .session-slot { margin-right: 0; }
+  .session-pill { padding: 0 var(--s2); }
+  .session-pill-label { display: none; }
+  .session-pill-short { display: inline; }
   .site-main { grid-template-columns: 1fr; }
   .site-actions { justify-content: flex-start; }
   .site-children { padding-left: var(--s4); }

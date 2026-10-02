@@ -1,4 +1,5 @@
 import './session.js';
+import './session-pill.js';
 import './palette.js';
 import { logout } from './api.js';
 import { on } from './h.js';
