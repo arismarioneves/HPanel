@@ -42,7 +42,7 @@ function showTab() {
   const tab = highlightTab();
   if (detail && !rendered.has(tab)) {
     rendered.add(tab);
-    RENDER[tab](panel(tab));
+    RENDER[tab](clear(panel(tab)));
   } else if (!detail && loadError) {
     clear(panel(tab)).append(errorBlock(loadError, () => init()));
   }

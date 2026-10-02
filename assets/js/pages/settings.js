@@ -39,7 +39,7 @@ async function refresh() {
     clear(state).append(h('p', {}, err.message));
     return;
   }
-  card.hidden = s.connected;
+  card.hidden = s.connected && !s.expired;
   if (!s.connected) {
     clear(state).append(h('div', { class: 'conn-status' }, h('span', { class: 'dot dot-off' }), 'Nenhuma conta conectada'));
     input.focus();
@@ -76,6 +76,14 @@ async function refresh() {
       busy(logoutBtn, false);
     }
   });
+
+  if (s.expired) {
+    clear(state).append(
+      h('div', { class: 'conn-status' }, h('span', { class: 'dot dot-warn' }), 'Sessão expirada — cole um novo token'),
+      h('div', { class: 'row' }, logoutBtn));
+    input.focus();
+    return;
+  }
 
   clear(state).append(
     h('div', { class: 'stack' },
