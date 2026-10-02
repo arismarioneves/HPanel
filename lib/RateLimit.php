@@ -10,7 +10,8 @@ final class RateLimit
     public function __construct(private string $dir, private string $secret)
     {
         if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
-            throw new ConfigException("Não foi possível criar o diretório de rate limit ({$dir}).");
+            error_log("HPanel: diretório não gravável: {$dir}");
+            throw new ConfigException('Não foi possível criar o diretório de rate limit. Verifique a permissão de escrita em storage/ (ou em storage_dir).');
         }
     }
 

@@ -43,4 +43,20 @@ final class RateLimitTest extends TestCase
             self::assertStringNotContainsString('1.1.1.1', basename($f) . file_get_contents($f));
         }
     }
+
+    public function testUnwritableDirMessageHidesPath(): void
+    {
+        $file = tempnam(sys_get_temp_dir(), 'hpfile');
+        $log = ini_set('error_log', sys_get_temp_dir() . '/hpanel-test.log');
+        try {
+            new RateLimit($file . '/ratelimit', random_bytes(32));
+            self::fail('esperava ConfigException');
+        } catch (\HPanel\ConfigException $e) {
+            self::assertStringNotContainsString(basename($file), $e->getMessage());
+            self::assertStringContainsString('storage/', $e->getMessage());
+        } finally {
+            ini_set('error_log', (string) $log);
+            unlink($file);
+        }
+    }
 }

@@ -100,4 +100,20 @@ final class SessionStoreTest extends TestCase
         self::assertNull($this->store->load('parada'));
         self::assertNull($this->store->load('morta'));
     }
+
+    public function testUnwritableDirMessageHidesPath(): void
+    {
+        $file = tempnam(sys_get_temp_dir(), 'hpfile');
+        $log = ini_set('error_log', sys_get_temp_dir() . '/hpanel-test.log');
+        try {
+            new SessionStore($file . '/sessions', random_bytes(32));
+            self::fail('esperava ConfigException');
+        } catch (\HPanel\ConfigException $e) {
+            self::assertStringNotContainsString(basename($file), $e->getMessage());
+            self::assertStringContainsString('storage/', $e->getMessage());
+        } finally {
+            ini_set('error_log', (string) $log);
+            unlink($file);
+        }
+    }
 }
