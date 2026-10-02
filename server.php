@@ -181,7 +181,7 @@
 
         <div class="page-title">
             <h1><?= htmlspecialchars($server['title'] ?? 'Servidor') ?></h1>
-            <p><?= htmlspecialchars($server['planDisplayableName'] ?? $server['planName']) ?> • <?= htmlspecialchars($server['datacenter']['title'] ?? 'N/A') ?></p>
+            <p><?= htmlspecialchars($server['planDisplayableName'] ?? $server['planName'] ?? 'N/A') ?> • <?= htmlspecialchars($server['datacenter']['title'] ?? 'N/A') ?></p>
         </div>
 
         <?php if ($account): ?>
@@ -223,7 +223,7 @@
                         <circle cx="12" cy="12" r="10"></circle>
                         <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
-                    Criado: <strong><?= date('d/m/Y', strtotime($account['created_at'] ?? 'now')) ?></strong>
+                    Criado: <strong><?= !empty($account['created_at']) ? date('d/m/Y', strtotime($account['created_at'])) : 'N/A' ?></strong>
                 </div>
             </div>
 
@@ -269,10 +269,10 @@
                     ?>
                         <div class="usage-chart-card">
                             <div class="usage-chart-header">
-                                <span class="usage-chart-title"><?= $item['icon'] ?> <?= $item['label'] ?></span>
+                                <span class="usage-chart-title"><span aria-hidden="true"><?= $item['icon'] ?></span> <?= htmlspecialchars($item['label']) ?></span>
                                 <span class="usage-chart-percentage <?= $usageClass ?>"><?= $percentage ?>%</span>
                             </div>
-                            <div class="progress-bar">
+                            <div class="progress-bar" role="progressbar" aria-valuenow="<?= $percentage ?>" aria-valuemin="0" aria-valuemax="100" aria-label="<?= htmlspecialchars($item['label']) ?>">
                                 <div class="progress-bar-fill <?= $usageClass ?>" style="width: <?= $percentage ?>%"></div>
                             </div>
                             <div class="usage-chart-details">
@@ -296,7 +296,7 @@
                 <div class="plan-limits-grid">
                     <?php if (isset($account['plan_limits'])): ?>
                         <div class="plan-limit-item">
-                            <div class="plan-limit-value"><?= $account['plan_limits']['cpu_cores'] ?? 'N/A' ?></div>
+                            <div class="plan-limit-value"><?= htmlspecialchars((string)($account['plan_limits']['cpu_cores'] ?? 'N/A')) ?></div>
                             <div class="plan-limit-label">CPU Cores</div>
                         </div>
                         <div class="plan-limit-item">
@@ -304,15 +304,15 @@
                             <div class="plan-limit-label">RAM</div>
                         </div>
                         <div class="plan-limit-item">
-                            <div class="plan-limit-value"><?= $account['plan_limits']['entry_processes'] ?? 'N/A' ?></div>
+                            <div class="plan-limit-value"><?= htmlspecialchars((string)($account['plan_limits']['entry_processes'] ?? 'N/A')) ?></div>
                             <div class="plan-limit-label">Entry Processes</div>
                         </div>
                         <div class="plan-limit-item">
-                            <div class="plan-limit-value"><?= $account['plan_limits']['active_processes'] ?? 'N/A' ?></div>
+                            <div class="plan-limit-value"><?= htmlspecialchars((string)($account['plan_limits']['active_processes'] ?? 'N/A')) ?></div>
                             <div class="plan-limit-label">Active Processes</div>
                         </div>
                         <div class="plan-limit-item">
-                            <div class="plan-limit-value"><?= $account['plan_limits']['max_addons'] ?? 'N/A' ?></div>
+                            <div class="plan-limit-value"><?= htmlspecialchars((string)($account['plan_limits']['max_addons'] ?? 'N/A')) ?></div>
                             <div class="plan-limit-label">Max Addons</div>
                         </div>
                         <div class="plan-limit-item">
@@ -356,7 +356,7 @@
                     </div>
                     <div class="info-card">
                         <span class="info-card-label">Backup</span>
-                        <span class="info-card-value"><?= ($account['backup_interval'] ?? 0) == 1 ? 'Diário' : 'A cada ' . ($account['backup_interval'] ?? 'N/A') . ' dias' ?></span>
+                        <span class="info-card-value"><?php $bi = (int)($account['backup_interval'] ?? 0); echo $bi === 1 ? 'Diário' : ($bi > 0 ? 'A cada ' . $bi . ' dias' : 'Indisponível'); ?></span>
                     </div>
                 </div>
             </div>
@@ -414,22 +414,22 @@
         </form>
 
         <div class="filter-tabs">
-            <a href="?orderId=<?= $orderId ?>&filter=all" class="filter-tab <?= $filter === 'all' ? 'active' : '' ?>">
+            <a href="?orderId=<?= $orderId ?>&filter=all&search=<?= urlencode($search) ?>" class="filter-tab <?= $filter === 'all' ? 'active' : '' ?>">
                 Todos (<?= $counts['all'] ?>)
             </a>
-            <a href="?orderId=<?= $orderId ?>&filter=wordpress" class="filter-tab <?= $filter === 'wordpress' ? 'active' : '' ?>">
+            <a href="?orderId=<?= $orderId ?>&filter=wordpress&search=<?= urlencode($search) ?>" class="filter-tab <?= $filter === 'wordpress' ? 'active' : '' ?>">
                 WordPress (<?= $counts['wordpress'] ?>)
             </a>
-            <a href="?orderId=<?= $orderId ?>&filter=other" class="filter-tab <?= $filter === 'other' ? 'active' : '' ?>">
+            <a href="?orderId=<?= $orderId ?>&filter=other&search=<?= urlencode($search) ?>" class="filter-tab <?= $filter === 'other' ? 'active' : '' ?>">
                 Outros (<?= $counts['other'] ?>)
             </a>
-            <a href="?orderId=<?= $orderId ?>&filter=main" class="filter-tab <?= $filter === 'main' ? 'active' : '' ?>">
+            <a href="?orderId=<?= $orderId ?>&filter=main&search=<?= urlencode($search) ?>" class="filter-tab <?= $filter === 'main' ? 'active' : '' ?>">
                 Principal (<?= $counts['main'] ?>)
             </a>
-            <a href="?orderId=<?= $orderId ?>&filter=addon" class="filter-tab <?= $filter === 'addon' ? 'active' : '' ?>">
+            <a href="?orderId=<?= $orderId ?>&filter=addon&search=<?= urlencode($search) ?>" class="filter-tab <?= $filter === 'addon' ? 'active' : '' ?>">
                 Addon (<?= $counts['addon'] ?>)
             </a>
-            <a href="?orderId=<?= $orderId ?>&filter=subdomain" class="filter-tab <?= $filter === 'subdomain' ? 'active' : '' ?>">
+            <a href="?orderId=<?= $orderId ?>&filter=subdomain&search=<?= urlencode($search) ?>" class="filter-tab <?= $filter === 'subdomain' ? 'active' : '' ?>">
                 Subdomínio (<?= $counts['subdomain'] ?>)
             </a>
         </div>
@@ -439,18 +439,10 @@
         $organizedSites = [];
         $subdomains = [];
 
-        // First pass: separate main/addon domains from subdomains
+        // First pass: separate main/addon domains from subdomains (flat list)
         foreach ($filteredWebsites as $site) {
-            if ($site['vhostType'] === 'subdomain') {
-                // Extract parent domain from subdomain
-                $parts = explode('.', $site['domain'], 2);
-                if (count($parts) > 1) {
-                    $parentDomain = $parts[1];
-                    if (!isset($subdomains[$parentDomain])) {
-                        $subdomains[$parentDomain] = [];
-                    }
-                    $subdomains[$parentDomain][] = $site;
-                }
+            if (($site['vhostType'] ?? '') === 'subdomain') {
+                $subdomains[] = $site;
             } else {
                 $organizedSites[] = $site;
             }
@@ -462,12 +454,32 @@
             if ($a['vhostType'] !== 'main' && $b['vhostType'] === 'main') return 1;
             return strcmp($a['domain'], $b['domain']);
         });
+
+        // Attach each subdomain to its longest-matching parent; keep the rest as orphans
+        $childrenByParent = [];
+        $orphanSubdomains = [];
+        $parentDomains = array_column($organizedSites, 'domain');
+        foreach ($subdomains as $sub) {
+            $bestParent = null;
+            foreach ($parentDomains as $parent) {
+                if ($parent !== '' && str_ends_with($sub['domain'], '.' . $parent)) {
+                    if ($bestParent === null || strlen($parent) > strlen($bestParent)) {
+                        $bestParent = $parent;
+                    }
+                }
+            }
+            if ($bestParent !== null) {
+                $childrenByParent[$bestParent][] = $sub;
+            } else {
+                $orphanSubdomains[] = $sub;
+            }
+        }
         ?>
 
         <div class="websites-list">
             <?php foreach ($organizedSites as $site): ?>
                 <?php
-                $siteSubdomains = $subdomains[$site['domain']] ?? [];
+                $siteSubdomains = $childrenByParent[$site['domain']] ?? [];
                 $hasSubdomains = !empty($siteSubdomains);
                 ?>
                 <div class="website-group">
@@ -480,9 +492,9 @@
                                 <?= htmlspecialchars($site['domain']) ?>
                             </span>
                             <div class="website-meta">
-                                <span>Criado: <?= date('d/m/Y', strtotime($site['createdAt'])) ?></span>
+                                <span>Criado: <?= !empty($site['createdAt']) ? date('d/m/Y', strtotime($site['createdAt'])) : 'N/A' ?></span>
                                 <span>•</span>
-                                <span>Atualizado: <?= date('d/m/Y', strtotime($site['updatedAt'])) ?></span>
+                                <span>Atualizado: <?= !empty($site['updatedAt']) ? date('d/m/Y', strtotime($site['updatedAt'])) : 'N/A' ?></span>
                                 <?php if ($hasSubdomains): ?>
                                     <span>•</span>
                                     <span style="color: var(--accent);"><?= count($siteSubdomains) ?> subdomínio(s)</span>
@@ -520,7 +532,7 @@
                                 </svg>
                             </button>
                             <button class="btn btn-secondary btn-icon btn-files"
-                                onclick="openFileBrowser('<?= htmlspecialchars($site['username']) ?>', '<?= htmlspecialchars($site['domain']) ?>', <?= $orderId ?>)"
+                                onclick="openFileBrowser(this, '<?= htmlspecialchars($site['username']) ?>', '<?= htmlspecialchars($site['domain']) ?>', <?= $orderId ?>)"
                                 data-tooltip="Gerenciador de Arquivos" aria-label="Gerenciador de Arquivos">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -539,7 +551,7 @@
                             <!-- Dropdown Menu -->
                             <div class="dropdown-menu-wrapper">
                                 <button class="btn btn-secondary btn-icon btn-more"
-                                    onclick="toggleDropdownMenu(this)"
+                                    onclick="toggleDropdownMenu(this, event)"
                                     data-tooltip="Mais opções" data-tooltip-position="left" aria-label="Mais opções">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <circle cx="12" cy="12" r="1"></circle>
@@ -589,9 +601,9 @@
                                             <?= htmlspecialchars($subdomain['domain']) ?>
                                         </span>
                                         <div class="website-meta">
-                                            <span>Criado: <?= date('d/m/Y', strtotime($subdomain['createdAt'])) ?></span>
+                                            <span>Criado: <?= !empty($subdomain['createdAt']) ? date('d/m/Y', strtotime($subdomain['createdAt'])) : 'N/A' ?></span>
                                             <span>•</span>
-                                            <span>Atualizado: <?= date('d/m/Y', strtotime($subdomain['updatedAt'])) ?></span>
+                                            <span>Atualizado: <?= !empty($subdomain['updatedAt']) ? date('d/m/Y', strtotime($subdomain['updatedAt'])) : 'N/A' ?></span>
                                         </div>
                                     </div>
                                     <div class="website-actions">
@@ -613,9 +625,42 @@
                 </div>
             <?php endforeach; ?>
 
-            <?php if (empty($organizedSites) && empty($subdomains)): ?>
+            <?php if (!empty($orphanSubdomains)): ?>
+                <?php foreach ($orphanSubdomains as $subdomain): ?>
+                    <div class="website-group">
+                        <div class="website-item subdomain-item">
+                            <div class="website-info">
+                                <span class="website-domain subdomain-domain">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; opacity: 0.5;" aria-hidden="true">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                    <?= htmlspecialchars($subdomain['domain']) ?>
+                                </span>
+                                <div class="website-meta">
+                                    <span>Criado: <?= !empty($subdomain['createdAt']) ? date('d/m/Y', strtotime($subdomain['createdAt'])) : 'N/A' ?></span>
+                                    <span>•</span>
+                                    <span>Atualizado: <?= !empty($subdomain['updatedAt']) ? date('d/m/Y', strtotime($subdomain['updatedAt'])) : 'N/A' ?></span>
+                                </div>
+                            </div>
+                            <div class="website-actions">
+                                <div class="website-badges">
+                                    <span class="badge badge-<?= ($subdomain['type'] ?? '') === 'wordpress' ? 'wordpress' : 'other' ?>">
+                                        <?= ($subdomain['type'] ?? '') === 'wordpress' ? 'WordPress' : 'Outro' ?>
+                                    </span>
+                                    <span class="badge badge-subdomain">Subdomain</span>
+                                    <span class="badge badge-<?= ($subdomain['status'] ?? '') === 'enabled' ? 'enabled' : 'disabled' ?>">
+                                        <?= ($subdomain['status'] ?? '') === 'enabled' ? 'Ativo' : 'Inativo' ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <?php if (empty($organizedSites) && empty($orphanSubdomains)): ?>
                 <div class="empty-state">
-                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-icon" aria-hidden="true">🔍</div>
                     <h3>Nenhum website encontrado</h3>
                     <p>Tente ajustar os filtros ou a busca.</p>
                 </div>
@@ -638,8 +683,7 @@
             }
         }
 
-        async function openFileBrowser(username, domain, orderId) {
-            const button = event.target.closest('button');
+        async function openFileBrowser(button, username, domain, orderId) {
             const originalContent = button.innerHTML;
 
             // Show loading state
@@ -728,8 +772,8 @@
                     } catch (error) {
                         console.error('Error:', error);
                         loading.style.display = 'none';
-                        empty.innerHTML = '<span style="color: var(--danger);">Erro ao carregar bancos</span>';
-                        empty.style.display = 'block';
+                        container.dataset.loaded = 'false';
+                        list.innerHTML = '<div class="databases-error" style="color: var(--danger); padding: var(--spacing-sm) 0;">Erro ao carregar bancos. Tente novamente.</div>';
                     }
                 }
             } else {
@@ -1078,10 +1122,10 @@
     </style>
 
     <!-- SSH Key Modal -->
-    <div id="sshKeyModal" class="modal-overlay">
+    <div id="sshKeyModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="sshKeyModalTitle">
         <div class="modal modal-wide">
             <div class="modal-header">
-                <span class="modal-title">Chave SSH (Git)</span>
+                <span class="modal-title" id="sshKeyModalTitle">Chave SSH (Git)</span>
                 <button class="modal-close" onclick="closeSshKeyModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1128,10 +1172,10 @@
     </div>
 
     <!-- PHP Version Modal -->
-    <div id="phpVersionModal" class="modal-overlay">
+    <div id="phpVersionModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="phpVersionModalTitle">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title">Alterar Versão PHP</span>
+                <span class="modal-title" id="phpVersionModalTitle">Alterar Versão PHP</span>
                 <button class="modal-close" onclick="closePhpVersionModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1172,7 +1216,19 @@
             }
         });
 
-        function toggleDropdownMenu(button) {
+        // Fecha modais com Esc ou clique no overlay (fundo)
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+            }
+        });
+
+        function toggleDropdownMenu(button, event) {
             event.stopPropagation();
             const menu = button.nextElementSibling;
             const isVisible = menu.style.display === 'block';
@@ -1248,7 +1304,7 @@
             saveBtn.textContent = 'Salvando...';
 
             try {
-                await HostingerConfig.fetch('api/set-php-version.php', {
+                const response = await HostingerConfig.fetch('api/set-php-version.php', {
                     method: 'POST',
                     body: JSON.stringify({
                         username: currentPhpModal.username,
@@ -1257,15 +1313,17 @@
                         phpVersion: version
                     })
                 });
+                const data = await response.json().catch(() => ({}));
 
-                // API doesn't return success response, so always show success
-                closePhpVersionModal();
-                UI.alert(`Solicitação para alterar PHP para versão ${version} enviada com sucesso!`, { variant: 'success', title: 'Pronto' });
+                if (response.ok && data.success) {
+                    closePhpVersionModal();
+                    UI.alert(`Versão PHP alterada para ${version} com sucesso!`, { variant: 'success', title: 'Pronto' });
+                } else {
+                    UI.alert(data.error || 'Não foi possível alterar a versão PHP. Tente novamente.', { variant: 'danger', title: 'Erro' });
+                }
             } catch (error) {
                 console.error('Error:', error);
-                // Still show success since the request was sent
-                closePhpVersionModal();
-                UI.alert(`Solicitação para alterar PHP para versão ${version} enviada!`, { variant: 'success', title: 'Pronto' });
+                UI.alert('Erro de conexão ao alterar a versão PHP.', { variant: 'danger', title: 'Erro' });
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Salvar';

@@ -2,7 +2,7 @@
 
 Dashboard personalizado para gerenciar múltiplos websites hospedados na Hostinger de forma centralizada.
 
-![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4?logo=php&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## 📋 Visão Geral
@@ -19,7 +19,7 @@ O Hostinger Dashboard oferece uma interface simplificada para gerenciar todos os
 - **🐘 Versão PHP** - Altere a versão PHP de qualquer domínio
 - **🔑 Chave SSH (Git)** - Veja, crie ou recrie a chave SSH de deploy de cada servidor
 - **📈 Estatísticas de uso** - Disco, inodes, RAM, CPU (com cache de 1h para reduzir chamadas)
-- **🔄 Renovação do token** - Renove o JWT em 1 clique e, opcionalmente, mantenha-o renovado automaticamente via cron
+- **🔄 Renovação do token** - Renove o JWT em 1 clique; o token também é renovado automaticamente durante a navegação (sessão deslizante, sem cron)
 
 ---
 
@@ -65,7 +65,7 @@ As sessões são armazenadas em arquivos JSON na pasta `cookies/`:
 
 ### Requisitos
 
-- PHP 7.4 ou superior
+- PHP 8.0 ou superior
 - Extensão cURL habilitada
 - Servidor web (Apache, Nginx, XAMPP, etc.)
 
@@ -73,8 +73,8 @@ As sessões são armazenadas em arquivos JSON na pasta `cookies/`:
 
 1. **Clone ou copie os arquivos** para seu servidor local:
 ```bash
-git clone https://github.com/seu-usuario/Hostinger-Dashboard.git
-cd Hostinger-Dashboard
+git clone https://github.com/arismarioneves/HPanel.git
+cd HPanel
 ```
 
 2. **Configure o caminho base** (apenas se o painel não estiver na raiz do domínio):
@@ -91,7 +91,7 @@ mkdir cookies
 
 4. **Acesse o dashboard** no navegador:
 ```
-http://localhost/Hostinger-Dashboard/
+http://localhost/HPanel/
 ```
 
 5. **Configure o token JWT** na página de Configurações.
@@ -162,7 +162,7 @@ Os controles ficam **apenas na página de Configurações**:
 ## 📁 Estrutura do Projeto
 
 ```
-Hostinger-Dashboard/
+HPanel/
 ├── index.php           # Página principal (lista servidores + busca global)
 ├── server.php          # Detalhes do servidor, websites e chave SSH
 ├── settings.php        # Configurações (token JWT + renovação)
@@ -226,6 +226,18 @@ O dashboard usa APIs internas do hPanel (não oficiais):
 - Tokens JWT expiram após ~1 hora (mitigado pela renovação manual/automática)
 - Se o token expirar de vez sem renovar, é preciso recolar o JWT via login
 - O DELETE da chave SSH não é documentado pelo hPanel; se a API rejeitar, a mensagem de erro é exibida e a chave permanece intacta
+
+---
+
+## ⚖️ Legalidade e Uso Responsável
+
+Este projeto **não burla nem contorna** nenhum controle da Hostinger. Ele apenas reaproveita o **token JWT da sua própria sessão** — o mesmo que o seu navegador já usa ao acessar o hPanel — para consultar e gerenciar **exclusivamente os recursos da sua própria conta**, aos quais você já tem acesso legítimo.
+
+- Não há quebra de autenticação, escalada de privilégios nem acesso a contas ou dados de terceiros.
+- As chamadas usam as mesmas APIs e o mesmo token que o próprio hPanel usa no seu navegador.
+- O token permanece apenas no seu servidor; nada é enviado para serviços externos.
+
+Na prática, é equivalente a automatizar ações que você mesmo faria manualmente no hPanel, dentro do seu próprio ambiente. Ainda assim, por utilizar **APIs internas não oficiais** (que podem mudar sem aviso), use por sua conta e risco e em conformidade com os Termos de Serviço da Hostinger.
 
 ---
 
