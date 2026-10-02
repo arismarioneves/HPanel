@@ -9,7 +9,7 @@
         </div>
     </div>
     <img class="hero-shot" src="assets/img/dashboard-preview.webp" width="1920" height="1230" loading="eager"
-         alt="Painel do HPanel no tema escuro: cards de servidores com uso de CPU, memória e disco, e a lista de sites de cada plano.">
+         alt="Painel do HPanel no tema escuro: cards de servidores com uso de disco e inodes e os sites de cada plano.">
 </section>
 
 <section class="landing-section" aria-labelledby="featuresTitle">
@@ -18,7 +18,7 @@
         <article class="card feature">
             <span class="feature-icon" aria-hidden="true"><?= View::icon('home') ?></span>
             <h3>Tudo em uma tela</h3>
-            <p class="muted">Todos os servidores com CPU, memória, disco e sites lado a lado, com alerta a partir de 80 % de uso.</p>
+            <p class="muted">Todos os servidores lado a lado, com disco, inodes e sites — e alerta a partir de 80 % de uso.</p>
         </article>
         <article class="card feature">
             <span class="feature-icon" aria-hidden="true"><?= View::icon('search') ?></span>
