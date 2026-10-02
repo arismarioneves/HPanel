@@ -1,35 +1,56 @@
 import '../app.js';
-import { get, post } from '../api.js';
-import { h, icon, $, clear } from '../h.js';
+import { clearCache, get, post } from '../api.js';
+import { h, icon, $, $$, clear, on } from '../h.js';
+import { setThemeMode, themeMode } from '../theme.js';
 import { toast } from '../toast.js';
 import { confirmDialog } from '../modal.js';
 
 const state = $('#connState');
-const card = $('#connectCard');
-const form = $('#connectForm');
-const input = $('#jwt');
-const fieldError = $('#jwtError');
 
-function showFieldError(message) {
-  fieldError.textContent = message || '';
-  fieldError.hidden = !message;
-  input.setAttribute('aria-invalid', message ? 'true' : 'false');
+function busy(button, isBusy) {
+  button.disabled = isBusy;
+  button.setAttribute('aria-busy', String(isBusy));
 }
 
-/** Pré-validação local (o servidor valida de novo). */
-function localCheck(token) {
-  if (!/^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return 'Isso não parece um token JWT. Ele começa com "eyJ" e tem três partes separadas por ponto.';
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    if (payload.exp && payload.exp * 1000 <= Date.now()) return 'Esse token já expirou. Entre no hPanel e copie um novo.';
-  } catch { /* o servidor decide */ }
-  return '';
+const statusLine = (dot, text, detail) => h('div', { class: 'stack' },
+  h('div', { class: 'conn-status' }, h('span', { class: `dot ${dot}` }), text),
+  detail ? h('span', { class: 'muted small' }, detail) : null);
+
+function renewButton() {
+  const button = h('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, icon('refresh'), 'Renovar agora');
+  button.addEventListener('click', async () => {
+    busy(button, true);
+    try {
+      await post('renew');
+      toast('Token renovado.', 'ok');
+      refresh();
+    } catch (err) {
+      toast(err.message, 'danger');
+    } finally {
+      busy(button, false);
+    }
+  });
+  return button;
 }
 
-function busy(button, on) {
-  button.disabled = on;
-  button.setAttribute('aria-busy', String(on));
+function logoutButton() {
+  const button = h('button', { type: 'button', class: 'btn btn-danger-ghost btn-sm' }, icon('logout'), 'Sair');
+  button.addEventListener('click', async () => {
+    if (!(await confirmDialog('Sair da conta?', 'O token é apagado deste servidor. Para voltar, será preciso conectar de novo.', 'Sair', 'danger'))) return;
+    busy(button, true);
+    try {
+      await post('logout');
+      clearCache();
+      location.assign('./');
+    } catch (err) {
+      toast(err.message, 'danger');
+      busy(button, false);
+    }
+  });
+  return button;
 }
+
+const connectLink = (label, primary) => h('a', { class: `btn ${primary ? 'btn-primary' : 'btn-secondary'} btn-sm`, href: 'connect' }, label);
 
 async function refresh() {
   let s;
@@ -39,81 +60,44 @@ async function refresh() {
     clear(state).append(h('p', {}, err.message));
     return;
   }
-  card.hidden = s.connected && !s.expired;
   if (!s.connected) {
-    clear(state).append(h('div', { class: 'conn-status' }, h('span', { class: 'dot dot-off' }), 'Nenhuma conta conectada'));
-    input.focus();
+    location.assign('./');
+    return;
+  }
+
+  if (s.demo) {
+    clear(state).append(
+      statusLine('dot-warn', 'Modo demonstração', 'Você está vendo dados fictícios. Nada aqui vem da Hostinger.'),
+      h('div', { class: 'row' },
+        connectLink('Conectar sua conta', true),
+        h('button', { type: 'button', class: 'btn btn-secondary btn-sm', 'data-action': 'logout' }, icon('logout'), 'Sair do demo')));
+    return;
+  }
+
+  if (s.expired) {
+    clear(state).append(
+      statusLine('dot-warn', 'Sessão expirada', 'Conecte de novo com um token novo para continuar.'),
+      h('div', { class: 'row' }, connectLink('Reconectar', true), logoutButton()));
     return;
   }
 
   const minutes = s.minutesLeft;
   const near = minutes !== null && minutes <= 15;
-  const renewBtn = h('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, icon('refresh'), 'Renovar agora');
-  const logoutBtn = h('button', { type: 'button', class: 'btn btn-danger-ghost btn-sm' }, icon('logout'), 'Sair');
-
-  renewBtn.addEventListener('click', async () => {
-    busy(renewBtn, true);
-    try {
-      await post('renew');
-      toast('Token renovado.', 'ok');
-      refresh();
-    } catch (err) {
-      toast(err.message, 'danger');
-    } finally {
-      busy(renewBtn, false);
-    }
-  });
-
-  logoutBtn.addEventListener('click', async () => {
-    if (!(await confirmDialog('Sair da conta?', 'O token é apagado deste servidor. Para voltar, será preciso conectar de novo.', 'Sair', 'danger'))) return;
-    busy(logoutBtn, true);
-    try {
-      await post('logout');
-      toast('Você saiu. O token foi apagado do servidor.', 'ok');
-      refresh();
-    } catch (err) {
-      toast(err.message, 'danger');
-      busy(logoutBtn, false);
-    }
-  });
-
-  if (s.expired) {
-    clear(state).append(
-      h('div', { class: 'conn-status' }, h('span', { class: 'dot dot-warn' }), 'Sessão expirada — cole um novo token'),
-      h('div', { class: 'row' }, logoutBtn));
-    input.focus();
-    return;
-  }
-
   clear(state).append(
-    h('div', { class: 'stack' },
-      h('div', { class: 'conn-status' }, h('span', { class: near ? 'dot dot-warn' : 'dot dot-ok' }), 'Conectado à Hostinger'),
-      h('span', { class: 'muted small' }, minutes === null
-        ? 'Validade do token desconhecida.'
-        : `Token válido por ${minutes} min · renovado automaticamente enquanto você usa o painel.`)),
-    h('div', { class: 'row' }, renewBtn, logoutBtn));
+    statusLine(near ? 'dot-warn' : 'dot-ok', 'Conectado à Hostinger', minutes === null
+      ? 'Validade do token desconhecida.'
+      : `Token válido por ${minutes} min · renovado automaticamente enquanto você usa o painel.`),
+    h('div', { class: 'row' }, renewButton(), connectLink('Trocar conta', false), logoutButton()));
 }
 
-input.addEventListener('input', () => showFieldError(''));
-
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const token = input.value.trim();
-  const problem = localCheck(token);
-  if (problem) { showFieldError(problem); input.focus(); return; }
-
-  const button = form.querySelector('button[type="submit"]');
-  busy(button, true);
-  try {
-    const { servers } = await post('connect', { token });
-    input.value = '';
-    toast(`Conectado! ${servers} ${servers === 1 ? 'servidor encontrado' : 'servidores encontrados'}.`, 'ok');
-    location.assign('./');
-  } catch (err) {
-    if (err.code === 'invalid_input' || err.code === 'rate_limited') showFieldError(err.message);
-    else toast(err.message, 'danger');
-    busy(button, false);
-  }
-});
+// Tema: claro / escuro / sistema.
+const radios = $$('input[name="theme"]');
+const syncTheme = () => {
+  const mode = themeMode();
+  radios.forEach((r) => { r.checked = r.value === mode; });
+};
+radios.forEach((r) => r.addEventListener('change', () => { if (r.checked) setThemeMode(r.value); }));
+on(document, 'toggle-theme', syncTheme); // o botão do topo grava claro/escuro
+syncTheme();
 
 refresh();

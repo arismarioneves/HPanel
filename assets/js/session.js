@@ -12,5 +12,5 @@ window.addEventListener('hp:session-expired', async () => {
     actions: [{ label: 'Agora não', value: false }, { label: 'Reconectar', value: true, variant: 'primary' }],
   });
   open = false;
-  if (reconnect) location.assign('settings');
+  if (reconnect) location.assign('connect');
 });

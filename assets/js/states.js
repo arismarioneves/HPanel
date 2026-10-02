@@ -10,7 +10,7 @@ const RECONNECT = new Set(['session_expired', 'not_connected']);
 
 export function errorBlock(err, retry) {
   const action = RECONNECT.has(err?.code)
-    ? h('a', { class: 'btn btn-primary btn-sm', href: 'settings' }, 'Reconectar')
+    ? h('a', { class: 'btn btn-primary btn-sm', href: 'connect' }, 'Reconectar')
     : retry ? h('button', { type: 'button', class: 'btn btn-secondary btn-sm', on: { click: retry } }, icon('refresh'), 'Tentar novamente') : null;
   return h('div', { class: 'state state-error', role: 'status' },
     icon('alert'),

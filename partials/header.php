@@ -17,7 +17,9 @@ use HPanel\View;
             <button type="button" class="btn btn-ghost btn-icon" data-action="toggle-theme" aria-label="Alternar tema claro/escuro" data-tip="Tema">
                 <?= View::icon('moon', 'i only-light') ?><?= View::icon('sun', 'i only-dark') ?>
             </button>
-            <a href="settings" class="btn btn-ghost btn-icon" aria-label="Configurações" data-tip="Configurações"<?= $page === 'settings' ? ' aria-current="page"' : '' ?>><?= View::icon('settings') ?></a>
+            <?php if ($connected): ?>
+                <a href="settings" class="btn btn-ghost btn-icon" aria-label="Configurações" data-tip="Configurações"<?= $page === 'settings' ? ' aria-current="page"' : '' ?>><?= View::icon('settings') ?></a>
+            <?php endif; ?>
         </nav>
     </div>
 </header>

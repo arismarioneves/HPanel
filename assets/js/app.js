@@ -1,5 +1,5 @@
 import './session.js';
-import { post } from './api.js';
+import { clearCache, post } from './api.js';
 import { on } from './h.js';
 import { toggleTheme } from './theme.js';
 import { toast } from './toast.js';
@@ -11,7 +11,7 @@ on(document, 'logout', async (event, button) => {
   button.disabled = true;
   try {
     await post('logout');
-    Object.keys(sessionStorage).filter((k) => k.startsWith('hp_cache:')).forEach((k) => sessionStorage.removeItem(k));
+    clearCache();
     location.assign('./');
   } catch (err) {
     button.disabled = false;

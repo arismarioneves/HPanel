@@ -101,7 +101,15 @@ main.container { padding-block: var(--s5) var(--s7); }
 .input[aria-invalid='true'] { border-color: var(--danger); }
 textarea.input { resize: vertical; }
 .hint { color: var(--muted); font-size: .85rem; margin-top: var(--s1); }
-.field-error { color: var(--danger); font-size: .85rem; margin-top: var(--s1); }
+.field-status { font-size: .85rem; margin-top: var(--s1); min-height: 1.3em; overflow-wrap: anywhere; }
+.field-status-ok { color: var(--ok); font-weight: 600; }
+.field-status-error { color: var(--danger); }
+.segmented { display: inline-flex; flex-wrap: wrap; gap: var(--s1); padding: var(--s1); border: 1px solid var(--border); border-radius: var(--r2); background: var(--surface-2); justify-self: start; }
+.segmented label { position: relative; }
+.segmented input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.segmented span { display: inline-flex; align-items: center; height: 32px; padding: 0 var(--s4); border-radius: var(--r1); color: var(--muted); font-weight: 500; font-size: .9rem; }
+.segmented input:checked + span { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.segmented input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 .form { display: grid; gap: var(--s3); }
 .search-box { display: flex; align-items: center; gap: var(--s2); height: 42px; padding: 0 var(--s3); border: 1px solid var(--border); border-radius: var(--r2); background: var(--surface); color: var(--muted); }
 .search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -199,8 +207,20 @@ textarea.input { resize: vertical; }
 /* ===== Código ===== */
 .code { margin: 0; padding: var(--s3); border: 1px solid var(--border); border-radius: var(--r2); background: var(--surface-2); white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; }
 
-/* ===== Passos ===== */
-.steps { margin: 0; padding-left: var(--s5); display: grid; gap: var(--s2); }
+/* ===== Conectar ===== */
+.connect-layout { display: grid; gap: var(--s4); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.guide { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); }
+.guide-step { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s3); }
+.guide-num { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.guide-body { display: grid; gap: var(--s2); justify-items: start; min-width: 0; }
+.guide-body p { margin: 0; }
+.guide-path { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); padding: var(--s2) var(--s3); border: 1px solid var(--border); border-radius: var(--r2); background: var(--surface-2); font-size: .85rem; font-weight: 600; }
+.guide-cookie { display: grid; grid-template-columns: auto minmax(0, 1fr); width: 100%; border: 1px solid var(--border); border-radius: var(--r2); overflow: hidden; font-size: .85rem; }
+.guide-cookie > span { padding: var(--s2) var(--s3); }
+.guide-cookie-name { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.guide-cookie-value { background: var(--surface-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.facts-list { margin: 0; padding-left: var(--s5); display: grid; gap: var(--s1); }
+.connect-demo { display: flex; align-items: center; justify-content: center; gap: var(--s2); flex-wrap: wrap; margin: 0; }
 
 /* ===== Estados ===== */
 .state { display: grid; justify-items: center; gap: var(--s2); padding: var(--s6) var(--s4); text-align: center; color: var(--muted); grid-column: 1 / -1; }
@@ -257,6 +277,7 @@ body.is-offline [data-action], body.is-offline .btn-primary { pointer-events: no
 @media (max-width: 1023px) {
   .site-main { grid-template-columns: minmax(0, 1fr) auto; }
   .site-main .badges { grid-column: 1 / -1; order: 3; }
+  .connect-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 639px) {
   h1 { font-size: 1.35rem; }

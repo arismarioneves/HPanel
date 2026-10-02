@@ -8,7 +8,7 @@ use HPanel\View;
 
 $ctx = View::boot();
 if (!$ctx->session->isConnected()) {
-    View::redirect('settings');
+    View::redirect('');
 }
 $orderId = filter_var($_GET['orderId'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 if ($orderId === false) {

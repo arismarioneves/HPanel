@@ -10,6 +10,16 @@ const inflight = new Map();
 const RETRY_DELAY = 1500;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Páginas que funcionam sem sessão: não redirecionam em `not_connected`.
+const STAY_PAGES = new Set(['landing', 'connect']);
+
+/** Apaga o cache de respostas da aba (chaves `hp_cache:`); usar ao conectar, sair ou entrar no demo. */
+export function clearCache() {
+  try {
+    Object.keys(sessionStorage).filter((k) => k.startsWith('hp_cache:')).forEach((k) => sessionStorage.removeItem(k));
+  } catch { /* armazenamento indisponível */ }
+}
+
 async function request(method, path, params) {
   let url = `api/${path}.php`;
   const init = { method, credentials: 'same-origin', headers: { Accept: 'application/json' } };
@@ -34,7 +44,7 @@ async function request(method, path, params) {
   if (json.ok) return json.data;
 
   const err = new ApiError(json.code, json.message, res.status);
-  if (err.code === 'not_connected' && document.body.dataset.page !== 'settings') location.assign('settings');
+  if (err.code === 'not_connected' && !STAY_PAGES.has(document.body.dataset.page)) location.assign('./');
   if (err.code === 'session_expired') window.dispatchEvent(new CustomEvent('hp:session-expired'));
   throw err;
 }
