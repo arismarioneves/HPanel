@@ -6,7 +6,7 @@ Options -Indexes
     # Nada fora da interface pública é servido pela web
     RewriteRule (^|/)\. - [F,L]
     RewriteRule ^(storage|lib|partials|tests|tools|vendor|docs)(/|$) - [F,L]
-    RewriteRule ^(config(\.exemplo)?\.php|composer\.(json|lock)|phpunit\.xml)$ - [F,L]
+    RewriteRule ^(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ - [F,L]
 
     # URLs sem .php
     RewriteCond %{REQUEST_FILENAME} !-d
