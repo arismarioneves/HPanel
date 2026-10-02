@@ -72,7 +72,7 @@ final class Http
                 self::checkCsrf($_SERVER);
             }
             $ctx = App::context();
-            if ($refreshToken && $ctx->session->isConnected()) {
+            if ($refreshToken && $ctx->session->isConnected() && !$ctx->isDemo()) {
                 try {
                     // Renovação oportunista: toda chamada autenticada mantém o token vivo.
                     $ctx->freshToken();

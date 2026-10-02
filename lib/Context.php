@@ -41,6 +41,9 @@ final class Context
         if (!$this->session->isConnected()) {
             throw ApiError::notConnected();
         }
+        if ($this->isDemo()) {
+            throw DemoSource::blocked();
+        }
         if ($this->tokenError !== null) {
             throw $this->tokenError;
         }
@@ -51,11 +54,20 @@ final class Context
         }
     }
 
-    /** Fonte de dados com token garantidamente fresco (renova se preciso). */
+    /** Sessão de demonstração: dados fictícios, sem token nem rede. */
+    public function isDemo(): bool
+    {
+        return ($this->session->data()['demo'] ?? false) === true;
+    }
+
+    /** Fonte de dados com token garantidamente fresco (renova se preciso); fictícia em sessão demo. */
     public function source(): DataSource
     {
         if ($this->source !== null) {
             return $this->source;
+        }
+        if ($this->isDemo()) {
+            return $this->source = new DemoSource();
         }
         $token = $this->freshToken();
         $data = $this->session->data() ?? throw ApiError::notConnected();

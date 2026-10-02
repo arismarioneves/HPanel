@@ -2,7 +2,7 @@
 
 use HPanel\View;
 
-/** @var string $base @var string $page @var string $title @var string $bodyFile @var string $bootJson @var bool $connected */
+/** @var string $base @var string $page @var string $title @var string $bodyFile @var string $bootJson @var bool $connected @var bool $demo */
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -22,6 +22,17 @@ use HPanel\View;
 <body data-page="<?= View::e($page) ?>">
     <a class="skip-link" href="#main">Pular para o conteúdo</a>
     <?php require __DIR__ . '/header.php'; ?>
+    <?php if ($demo): ?>
+        <div class="demo-bar" role="status">
+            <div class="container demo-bar-inner">
+                <span><?= View::icon('info') ?>Você está vendo dados fictícios.</span>
+                <span class="row">
+                    <a href="connect" class="btn btn-primary btn-sm">Conectar sua conta</a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-action="logout">Sair do demo</button>
+                </span>
+            </div>
+        </div>
+    <?php endif; ?>
     <main id="main" class="container" tabindex="-1">
         <?php require $bodyFile; ?>
     </main>

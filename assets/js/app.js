@@ -1,9 +1,23 @@
 import './session.js';
+import { post } from './api.js';
 import { on } from './h.js';
 import { toggleTheme } from './theme.js';
 import { toast } from './toast.js';
 
 on(document, 'toggle-theme', toggleTheme);
+
+// "Sair do demo" (e outros botões de sair): encerra a sessão e volta para a página inicial.
+on(document, 'logout', async (event, button) => {
+  button.disabled = true;
+  try {
+    await post('logout');
+    Object.keys(sessionStorage).filter((k) => k.startsWith('hp_cache:')).forEach((k) => sessionStorage.removeItem(k));
+    location.assign('./');
+  } catch (err) {
+    button.disabled = false;
+    toast(err.message, 'danger');
+  }
+});
 
 // <base href> faria "#main" navegar para a raiz; foca o conteúdo direto.
 document.addEventListener('click', (event) => {

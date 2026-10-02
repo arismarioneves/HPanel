@@ -68,6 +68,10 @@ main.container { padding-block: var(--s5) var(--s7); }
 .brand:hover { text-decoration: none; }
 .brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r2); background: var(--accent); color: var(--on-accent); font-weight: 800; }
 .topbar-actions { display: flex; gap: var(--s1); }
+.demo-bar { position: sticky; top: 61px; z-index: 19; background: color-mix(in srgb, var(--warn) 14%, var(--surface)); border-bottom: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border)); font-size: .9rem; }
+.demo-bar-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; padding-block: var(--s2); }
+.demo-bar-inner > span:first-child { display: inline-flex; align-items: center; gap: var(--s2); font-weight: 600; }
+.demo-bar-inner .i { color: var(--warn); }
 .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s4); margin-bottom: var(--s5); flex-wrap: wrap; }
 .page-head p { margin-top: var(--s1); }
 .back { display: inline-flex; align-items: center; gap: var(--s1); color: var(--muted); margin-bottom: var(--s3); font-size: .9rem; }
