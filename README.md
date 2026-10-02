@@ -60,12 +60,14 @@ cp config.exemplo.php config.php
 
 3. **Acesse o dashboard** no navegador e **configure o token JWT** na página de Configurações.
 
+> **Atualização:** Ao atualizar de uma versão antiga, apague a pasta cookies/ (sessões antigas em texto puro).
+
 ### Nginx
 
 No Apache o `.htaccess` já bloqueia tudo que não é público. No Nginx, use o bloco equivalente (instalação na **raiz** do domínio, `base => '/'`):
 
 ```nginx
-location ~ ^/(storage|lib|partials|tests|tools|vendor|docs)(/|$) { deny all; }
+location ~ ^/(storage|lib|partials|tests|tools|vendor|docs|cookies)(/|$) { deny all; }
 location ~ ^/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ { deny all; }
 location ~ /\. { deny all; }
 location / { try_files $uri $uri/ $uri.php?$query_string; }
@@ -74,7 +76,7 @@ location / { try_files $uri $uri/ $uri.php?$query_string; }
 Em **subpasta**, prefixe as regras com o mesmo caminho de `base`. Exemplo para `'base' => '/hpanel/'`:
 
 ```nginx
-location ~ ^/hpanel/(storage|lib|partials|tests|tools|vendor|docs)(/|$) { deny all; }
+location ~ ^/hpanel/(storage|lib|partials|tests|tools|vendor|docs|cookies)(/|$) { deny all; }
 location ~ ^/hpanel/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ { deny all; }
 location ~ /\. { deny all; }
 location /hpanel/ { try_files $uri $uri/ $uri.php?$query_string; }

@@ -22,7 +22,7 @@ final class Config
         $raw = is_array($raw) ? $raw : [];
 
         $secret = $raw['app_secret'] ?? null;
-        if ($secret !== null && $secret !== '' && (!is_string($secret) || preg_match('/^[a-f0-9]{64}$/', $secret) !== 1)) {
+        if ($secret !== null && $secret !== '' && (!is_string($secret) || preg_match('/^[a-f0-9]{64}$/D', $secret) !== 1)) {
             throw new ConfigException(
                 'app_secret inválido em config.php (esperado 64 caracteres hexadecimais). Corrija ou remova a linha para gerar um novo.'
             );

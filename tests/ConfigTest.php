@@ -48,6 +48,13 @@ final class ConfigTest extends TestCase
         self::assertSame($src, file_get_contents($this->dir . '/config.php'), 'config.php não é sobrescrito');
     }
 
+    public function testSecretWithTrailingNewlineIsRejected(): void
+    {
+        $this->expectException(\HPanel\ConfigException::class);
+        file_put_contents($this->dir . '/config.php', "<?php return ['app_secret' => '" . str_repeat('ab', 32) . "\n'];");
+        Config::load($this->dir);
+    }
+
     public function testNormalizesBaseAndDefaultsStorage(): void
     {
         $c = Config::fromArray(['base' => '\\sub\\pasta\\', 'app_secret' => str_repeat('ab', 32)], '/raiz');
