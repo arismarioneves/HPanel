@@ -67,7 +67,7 @@ final class Session
     public function start(array $data): void
     {
         if ($this->sid !== null) {
-            $this->store->delete($this->sid);
+            $this->withLock(fn() => $this->store->delete((string) $this->sid));
         }
         $this->sid = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
         $this->write($data);
@@ -88,7 +88,8 @@ final class Session
     public function destroy(): void
     {
         if ($this->sid !== null) {
-            $this->store->delete($this->sid);
+            // Sob o lock: uma renovação em andamento não recria o arquivo depois do logout.
+            $this->withLock(fn() => $this->store->delete((string) $this->sid));
         }
         $this->sid = null;
         $this->data = null;

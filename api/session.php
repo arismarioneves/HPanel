@@ -14,7 +14,8 @@ Http::handle(['GET'], static function (Request $req, Context $ctx): array {
     $exp = Jwt::expiry((string) ($data['token'] ?? ''));
     return [
         'connected' => true,
+        'expired' => $exp !== null && $exp <= $ctx->now(),
         'expiresAt' => $exp,
         'minutesLeft' => $exp === null ? null : max(0, intdiv($exp - $ctx->now(), 60)),
     ];
-});
+}, false);

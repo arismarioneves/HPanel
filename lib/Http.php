@@ -57,13 +57,13 @@ final class Http
      * @param list<string> $methods
      * @param callable(Request, Context): mixed $handler
      */
-    public static function handle(array $methods, callable $handler): never
+    public static function handle(array $methods, callable $handler, bool $refreshToken = true): never
     {
         self::securityHeaders();
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
 
-        [$status, $payload] = self::run(static function () use ($methods, $handler): mixed {
+        [$status, $payload] = self::run(static function () use ($methods, $handler, $refreshToken): mixed {
             $request = Request::fromGlobals();
             if (!in_array($request->method, $methods, true)) {
                 throw ApiError::methodNotAllowed();
@@ -71,7 +71,16 @@ final class Http
             if ($request->method !== 'GET') {
                 self::checkCsrf($_SERVER);
             }
-            return $handler($request, App::context());
+            $ctx = App::context();
+            if ($refreshToken && $ctx->session->isConnected()) {
+                try {
+                    // Renovação oportunista: toda chamada autenticada mantém o token vivo.
+                    $ctx->freshToken();
+                } catch (ApiError) {
+                    // O handler relança o erro se de fato precisar da Hostinger.
+                }
+            }
+            return $handler($request, $ctx);
         });
 
         http_response_code($status);

@@ -33,4 +33,4 @@ Http::handle(['POST'], static function (Request $req, Context $ctx): array {
         'cache' => ['servers' => ['at' => $ctx->now(), 'value' => $servers]],
     ]);
     return ['servers' => count($servers)];
-});
+}, false);
