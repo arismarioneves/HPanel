@@ -41,6 +41,7 @@ O dashboard usa o **token JWT** da sua própria sessão no hPanel. Você cola o 
 ### Requisitos
 
 - PHP 8.1 ou superior, com as extensões `curl` e `openssl`
+- Certificados de CA configurados no PHP (`curl.cainfo` no `php.ini`, apontando para um `cacert.pem`). Sem isso a conexão com a Hostinger falha com "A Hostinger não respondeu" e o log mostra `unable to get local issuer certificate`.
 - Servidor web (Apache, Nginx, Laragon, XAMPP, etc.)
 
 ### Passos
