@@ -1,5 +1,5 @@
 import '../app.js';
-import { get, post } from '../api.js';
+import { cached, get, post } from '../api.js';
 import { h, icon, $, clear, boot } from '../h.js';
 import { errorBlock, emptyBlock, skeletonLines } from '../states.js';
 import { toast } from '../toast.js';
@@ -54,19 +54,23 @@ async function init(refresh = false) {
   const p = panel(tab);
   loadError = null;
   clear(p).append(...skeletonLines(6));
+  let shown = false;
   try {
-    detail = await get('account', refresh ? { orderId, refresh: 1 } : { orderId });
+    await cached('account', { orderId }, (data) => {
+      shown = true;
+      detail = data;
+      rendered.clear();
+      TABS.forEach((t) => clear(panel(t)));
+      renderHead();
+      showTab();
+    }, { refresh });
   } catch (err) {
+    if (shown) return;
     loadError = err;
     clear(p).append(errorBlock(err, () => init(refresh)));
     if (detail) rendered.delete(tab);
     else $('#serverTitle').textContent = 'Servidor';
-    return;
   }
-  rendered.clear();
-  TABS.forEach((t) => clear(panel(t)));
-  renderHead();
-  showTab();
 }
 
 function renderHead() {

@@ -1,5 +1,5 @@
 import '../app.js';
-import { get } from '../api.js';
+import { cached } from '../api.js';
 import { h, icon, $, $$, clear, on } from '../h.js';
 import { errorBlock, emptyBlock, skeletonCards } from '../states.js';
 import { meter, badge } from '../components.js';
@@ -9,21 +9,33 @@ const grid = $('#servers');
 const search = $('#siteSearch');
 const results = $('#searchResults');
 let sites = [];
+// Último resultado de uso por servidor: re-renderizar os cards não volta os medidores ao skeleton.
+const usageBox = new Map();
+let loadSeq = 0;
 
 const setKpi = (key, value) => { $(`[data-kpi="${key}"]`).textContent = String(value); };
 
 async function load(refresh = false) {
+  const seq = ++loadSeq;
+  const requested = new Set();
+  let shown = false;
   grid.setAttribute('aria-busy', 'true');
+  if (refresh) usageBox.clear();
   clear(grid).append(...skeletonCards(6));
   try {
-    const data = await get('websites', refresh ? { refresh: 1 } : undefined);
-    render(data.servers, data.cachedAt);
-    loadUsage(data.servers, refresh);
+    await cached('websites', undefined, (data) => {
+      if (seq !== loadSeq) return;
+      shown = true;
+      render(data.servers, data.cachedAt);
+      loadUsage(data.servers.filter((s) => !requested.has(s.orderId)), refresh, seq);
+      data.servers.forEach((s) => requested.add(s.orderId));
+    }, { refresh });
   } catch (err) {
+    if (seq !== loadSeq || shown) return;
     $('#freshness').textContent = '';
     clear(grid).append(errorBlock(err, () => load(refresh)));
   } finally {
-    grid.setAttribute('aria-busy', 'false');
+    if (seq === loadSeq) grid.setAttribute('aria-busy', 'false');
   }
 }
 
@@ -49,25 +61,34 @@ function card(s) {
     h('div', { class: 'card-sub' },
       badge(s.planDisplayableName || s.planName || 'Plano', 'accent'),
       s.datacenter?.title ? h('span', { class: 'card-sub-text', title: s.datacenter.title }, s.datacenter.title) : null),
-    h('div', { class: 'meters', dataset: { meters: '' } }, h('div', { class: 'skeleton skeleton-line' }), h('div', { class: 'skeleton skeleton-line' })),
+    h('div', { class: 'meters', dataset: { meters: '' } }, ...(usageBox.get(s.orderId)?.() || [h('div', { class: 'skeleton skeleton-line' }), h('div', { class: 'skeleton skeleton-line' })])),
     h('div', { class: 'card-foot' },
       h('span', {}, icon('globe'), `${count} ${count === 1 ? 'site' : 'sites'}`),
       s.server?.hostname ? h('span', { class: 'mono', title: 'Hostname' }, s.server.hostname) : null));
 }
 
-function loadUsage(servers, refresh) {
+/** `make` cria os nós de uso; guardado para redesenhar os cards sem voltar ao skeleton. */
+function showUsage(orderId, make) {
+  usageBox.set(orderId, make);
+  const box = grid.querySelector(`[data-order="${CSS.escape(String(orderId))}"] [data-meters]`);
+  if (box) clear(box).append(...make());
+}
+
+const note = (text) => () => [h('span', { class: 'muted small' }, text)];
+
+function loadUsage(servers, refresh, seq) {
   return Promise.allSettled(servers.map(async (s) => {
-    const box = grid.querySelector(`[data-order="${CSS.escape(String(s.orderId))}"] [data-meters]`);
-    if (!box) return;
-    if (!(s.websites || []).length) { clear(box).append(h('span', { class: 'muted small' }, 'Sem sites ainda')); return; }
+    if (!(s.websites || []).length) { showUsage(s.orderId, note('Sem sites ainda')); return; }
     try {
-      const { usage } = await get('usage', refresh ? { orderId: s.orderId, refresh: 1 } : { orderId: s.orderId });
-      const meters = [['storage', 'Disco', 'mb'], ['inodes', 'Inodes', 'n']]
-        .filter(([key]) => usage?.[key]?.limit > 0)
-        .map(([key, label, fmt]) => meter(label, usage[key].value, usage[key].limit, fmt, true));
-      clear(box).append(...(meters.length ? meters : [h('span', { class: 'muted small' }, 'Sem dados de uso')]));
+      await cached('usage', { orderId: s.orderId }, ({ usage }) => {
+        if (seq !== loadSeq) return;
+        const keys = [['storage', 'Disco', 'mb'], ['inodes', 'Inodes', 'n']].filter(([key]) => usage?.[key]?.limit > 0);
+        showUsage(s.orderId, keys.length
+          ? () => keys.map(([key, label, fmt]) => meter(label, usage[key].value, usage[key].limit, fmt, true))
+          : note('Sem dados de uso'));
+      }, { refresh });
     } catch {
-      clear(box).append(h('span', { class: 'muted small' }, 'Uso indisponível no momento'));
+      if (seq === loadSeq) showUsage(s.orderId, note('Uso indisponível no momento'));
     }
   }));
 }
