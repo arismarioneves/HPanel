@@ -11,6 +11,12 @@
     <div class="kpi"><span class="kpi-value" data-kpi="servers">–</span><span class="kpi-label">Servidores</span></div>
     <div class="kpi"><span class="kpi-value" data-kpi="sites">–</span><span class="kpi-label">Sites</span></div>
     <div class="kpi"><span class="kpi-value" data-kpi="wordpress">–</span><span class="kpi-label">WordPress</span></div>
+    <div class="kpi"><span class="kpi-value" data-kpi="attention">–</span><span class="kpi-label">Em atenção</span></div>
+</section>
+
+<section id="attention" class="attention" aria-labelledby="attentionTitle" hidden>
+    <h2 id="attentionTitle" class="attention-head"><?= View::icon('alert') ?>Atenção</h2>
+    <ul id="attentionList" class="attention-list"></ul>
 </section>
 
 <div class="search">

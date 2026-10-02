@@ -142,6 +142,18 @@ textarea.input { resize: vertical; }
 .kpi-value { display: block; font-size: clamp(1.25rem, 4vw, 1.6rem); font-weight: 700; font-variant-numeric: tabular-nums; }
 .kpi-label { color: var(--muted); font-size: .85rem; }
 
+/* ===== Atenção ===== */
+.attention { margin-bottom: var(--s5); padding: var(--s3) var(--s4); border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border)); border-radius: var(--r3); background: color-mix(in srgb, var(--warn) 6%, var(--surface)); }
+.attention-head { display: flex; align-items: center; gap: var(--s2); font-size: .95rem; margin-bottom: var(--s2); }
+.attention-head .i { color: var(--warn); }
+.attention-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s1); }
+.attention-item { display: flex; align-items: center; gap: var(--s2); min-width: 0; padding: var(--s2); border-radius: var(--r2); color: var(--text); }
+.attention-item:hover { text-decoration: none; background: var(--surface-2); }
+.attention-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.attention-pct { font-variant-numeric: tabular-nums; }
+.attention-icon-warn, .attention-pct-warn { color: var(--warn); }
+.attention-icon-danger, .attention-pct-danger { color: var(--danger); }
+
 /* ===== Cards de servidor ===== */
 .server-card { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; color: var(--text); transition: border-color var(--t), transform var(--t); }
 .server-card:hover { text-decoration: none; border-color: var(--border-strong); transform: translateY(-1px); }

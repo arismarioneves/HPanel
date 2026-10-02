@@ -5,6 +5,7 @@ import { h, icon, $, $$, clear, on } from '../h.js';
 import { errorBlock, emptyBlock, skeletonCards } from '../states.js';
 import { meter, badge } from '../components.js';
 import { relTime } from '../format.js';
+import { attentionItems, attentionCount } from '../attention.js';
 
 const grid = $('#servers');
 const search = $('#siteSearch');
@@ -13,6 +14,10 @@ let sites = [];
 // Último resultado de uso por servidor: re-renderizar os cards não volta os medidores ao skeleton.
 const usageBox = new Map();
 let loadSeq = 0;
+// Uso por servidor para o painel "Atenção" (chave orderId: stale→fresh substitui, não duplica).
+const attention = new Map();
+// Servidores com uso ainda sem nenhuma resposta: o KPI fica em "–" até zerar.
+const pending = new Set();
 
 const setKpi = (key, value) => { $(`[data-kpi="${key}"]`).textContent = String(value); };
 
@@ -21,7 +26,7 @@ async function load(refresh = false) {
   const requested = new Set();
   let shown = null;
   grid.setAttribute('aria-busy', 'true');
-  if (refresh) usageBox.clear();
+  if (refresh) { usageBox.clear(); attention.clear(); pending.clear(); renderAttention(); }
   clear(grid).append(...skeletonCards(6));
   try {
     await cached('websites', undefined, (data) => {
@@ -47,6 +52,8 @@ function render(servers, cachedAt) {
   setKpi('sites', sites.length);
   setKpi('wordpress', sites.filter((s) => s.type === 'wordpress').length);
   $('#freshness').textContent = `Atualizado ${relTime(cachedAt)}`;
+  const ids = new Set(servers.map((s) => s.orderId));
+  for (const id of [...attention.keys(), ...pending]) if (!ids.has(id)) { attention.delete(id); pending.delete(id); }
 
   if (!servers.length) {
     clear(grid).append(emptyBlock('Nenhum servidor nesta conta.', 'Os planos de hospedagem da sua conta Hostinger aparecem aqui.'));
@@ -78,9 +85,23 @@ function showUsage(orderId, make) {
 
 const note = (text) => () => [h('span', { class: 'muted small' }, text)];
 
+function renderAttention() {
+  const items = attentionItems(attention);
+  setKpi('attention', pending.size ? '–' : attentionCount(items));
+  const panel = $('#attention');
+  panel.hidden = !items.length;
+  clear($('#attentionList')).append(...items.map((it) => h('li', {},
+    h('a', { class: 'attention-item', href: `server?orderId=${encodeURIComponent(it.orderId)}` },
+      icon('alert', `i attention-icon-${it.level}`),
+      h('span', { class: 'attention-title', title: it.title }, it.title),
+      h('span', { class: 'muted' }, it.metric),
+      h('strong', { class: `attention-pct attention-pct-${it.level}` }, `${it.percent}%`)))));
+}
+
 function loadUsage(servers, refresh, seq) {
-  return Promise.allSettled(servers.map(async (s) => {
+  const run = Promise.allSettled(servers.map(async (s) => {
     if (!(s.websites || []).length) { showUsage(s.orderId, note('Sem sites ainda')); return; }
+    pending.add(s.orderId);
     let prev = null;
     try {
       await cached('usage', { orderId: s.orderId }, (data) => {
@@ -91,11 +112,19 @@ function loadUsage(servers, refresh, seq) {
         showUsage(s.orderId, keys.length
           ? () => keys.map(([key, label, fmt]) => meter(label, usage[key].value, usage[key].limit, fmt, true))
           : note('Sem dados de uso'));
+        attention.set(s.orderId, { title: s.title || 'Servidor', usage });
+        pending.delete(s.orderId);
+        renderAttention();
       }, { refresh });
     } catch {
-      if (seq === loadSeq) showUsage(s.orderId, note('Uso indisponível no momento'));
+      if (seq !== loadSeq) return;
+      showUsage(s.orderId, note('Uso indisponível no momento'));
+      pending.delete(s.orderId);
+      renderAttention();
     }
   }));
+  renderAttention();
+  return run;
 }
 
 function showResults(query) {
