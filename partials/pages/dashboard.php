@@ -19,6 +19,11 @@
     <ul id="attentionList" class="attention-list"></ul>
 </section>
 
+<section id="favorites" class="favorites" aria-labelledby="favoritesTitle" hidden>
+    <h2 id="favoritesTitle" class="favorites-head"><?= View::icon('star') ?>Favoritos</h2>
+    <ul id="favoritesList" class="favorites-list"></ul>
+</section>
+
 <div class="search">
     <label class="search-box">
         <?= View::icon('search') ?>

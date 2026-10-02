@@ -3,9 +3,10 @@ import { cached } from '../api.js';
 import { sameData } from '../swr.js';
 import { h, icon, $, $$, clear, on } from '../h.js';
 import { errorBlock, emptyBlock, skeletonCards } from '../states.js';
-import { meter, badge } from '../components.js';
+import { meter, badge, iconButton, openExternal } from '../components.js';
 import { relTime } from '../format.js';
 import { attentionItems, attentionCount } from '../attention.js';
+import * as favs from '../favorites.js';
 
 const grid = $('#servers');
 const search = $('#siteSearch');
@@ -127,6 +128,24 @@ function loadUsage(servers, refresh, seq) {
   return run;
 }
 
+const extLink = (href, label, name) =>
+  h('a', { class: 'btn btn-ghost btn-icon btn-sm', href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': label, 'data-tip': label }, icon(name));
+
+function renderFavorites() {
+  const items = favs.list();
+  $('#favorites').hidden = !items.length;
+  clear($('#favoritesList')).append(...items.map((f) => h('li', { class: 'fav' },
+    h('div', { class: 'fav-id' },
+      h('strong', { class: 'fav-domain', title: f.domain }, f.domain),
+      h('span', { class: 'muted small fav-server', title: f.serverTitle }, f.serverTitle || 'Servidor')),
+    h('div', { class: 'fav-actions' },
+      h('a', { class: 'btn btn-ghost btn-icon btn-sm', href: `server?orderId=${encodeURIComponent(f.orderId)}#sites`, 'aria-label': 'Abrir servidor', 'data-tip': 'Servidor' }, icon('server')),
+      extLink(`https://${f.domain}`, 'Visitar site', 'globe'),
+      extLink(`https://hpanel.hostinger.com/websites/${encodeURIComponent(f.domain)}`, 'Abrir no hPanel', 'external'),
+      iconButton('folder', 'Gerenciador de arquivos', () => openExternal('file-browser', { orderId: f.orderId, domain: f.domain })),
+      iconButton('x', 'Remover dos favoritos', () => favs.toggle(f))))));
+}
+
 function showResults(query) {
   const q = query.trim().toLowerCase();
   if (q.length < 2) { results.hidden = true; return; }
@@ -148,6 +167,8 @@ search.addEventListener('focus', () => showResults(search.value));
 search.addEventListener('keydown', (e) => { if (e.key === 'Escape') { search.value = ''; results.hidden = true; } });
 document.addEventListener('click', (e) => { if (!e.target.closest('.search')) results.hidden = true; });
 
+favs.subscribe(renderFavorites);
+renderFavorites();
 on(document, 'refresh', () => load(true));
 
 load();

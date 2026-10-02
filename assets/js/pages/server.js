@@ -8,6 +8,7 @@ import { confirmDialog } from '../modal.js';
 import { meter, badge, section, fact, iconButton, openExternal } from '../components.js';
 import { formatDate, formatMb, relTime } from '../format.js';
 import { groupSites } from '../sites.js';
+import * as favs from '../favorites.js';
 
 const { orderId } = boot();
 const TABS = ['visao', 'sites', 'bancos', 'ferramentas'];
@@ -191,6 +192,7 @@ function siteRow(site, children = []) {
         badge(VHOST[site.vhostType] || site.vhostType || '—'),
         badge(site.status === 'enabled' ? 'Ativo' : 'Inativo', site.status === 'enabled' ? 'ok' : 'danger')),
       h('div', { class: 'site-actions' },
+        starButton(site.domain),
         iconButton('folder', 'Gerenciador de arquivos', () => openExternal('file-browser', { orderId, domain: site.domain })),
         dbButton,
         iconButton('code', 'Versão PHP', () => { phpDomain = site.domain; location.hash = 'ferramentas'; phpControls?.select(site.domain); }),
@@ -201,6 +203,32 @@ function siteRow(site, children = []) {
     dbs,
     children.length ? h('div', { class: 'site-children' }, children.map((c) => siteRow(c))) : null);
 }
+
+const favTip = (on) => (on ? 'Remover dos favoritos' : 'Adicionar aos favoritos');
+
+function starButton(domain) {
+  const on = favs.has(domain);
+  return h('button', {
+    type: 'button', class: 'btn btn-ghost btn-icon btn-sm fav-btn', 'aria-label': 'Favorito', 'aria-pressed': String(on),
+    'data-tip': favTip(on), dataset: { fav: domain },
+    on: {
+      click: () => {
+        const was = favs.has(domain);
+        const now = favs.toggle({ domain, orderId, serverTitle: detail.server.title || 'Servidor' });
+        if (!was && !now) toast(`Limite de ${favs.MAX_FAVS} favoritos atingido. Remova algum para adicionar outro.`, 'warn');
+      },
+    },
+  }, icon('star'));
+}
+
+/** Mantém as estrelas em dia quando os favoritos mudam (nesta aba, no dashboard de outra aba etc.). */
+favs.subscribe(() => {
+  for (const b of document.querySelectorAll('[data-fav]')) {
+    const on = favs.has(b.dataset.fav);
+    b.setAttribute('aria-pressed', String(on));
+    b.dataset.tip = favTip(on);
+  }
+});
 
 async function toggleDbs(button, box, domain) {
   const opening = box.hidden;
