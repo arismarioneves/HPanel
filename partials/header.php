@@ -2,7 +2,7 @@
 
 use HPanel\View;
 
-/** @var bool $connected @var string $page */
+/** @var bool $connected @var string $page @var bool $demo */
 ?>
 <header class="topbar">
     <div class="container topbar-inner">
@@ -12,6 +12,7 @@ use HPanel\View;
         </a>
         <nav class="topbar-actions" aria-label="Principal">
             <?php if ($connected): ?>
+                <button type="button" class="btn btn-ghost btn-icon" data-action="palette" aria-label="Buscar sites e comandos" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /" data-tip="Buscar · Ctrl K"<?= $demo ? ' data-demo' : '' ?>><?= View::icon('search') ?></button>
                 <a href="./" class="btn btn-ghost btn-icon" aria-label="Servidores" data-tip="Servidores"<?= $page === 'dashboard' ? ' aria-current="page"' : '' ?>><?= View::icon('home') ?></a>
             <?php endif; ?>
             <button type="button" class="btn btn-ghost btn-icon" data-action="toggle-theme" aria-label="Alternar tema claro/escuro" data-tip="Tema">

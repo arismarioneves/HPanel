@@ -1,5 +1,6 @@
 import './session.js';
-import { clearCache, post } from './api.js';
+import './palette.js';
+import { logout } from './api.js';
 import { on } from './h.js';
 import { toggleTheme } from './theme.js';
 import { toast } from './toast.js';
@@ -10,9 +11,7 @@ on(document, 'toggle-theme', toggleTheme);
 on(document, 'logout', async (event, button) => {
   button.disabled = true;
   try {
-    await post('logout');
-    clearCache();
-    location.assign('./');
+    await logout();
   } catch (err) {
     button.disabled = false;
     toast(err.message, 'danger');

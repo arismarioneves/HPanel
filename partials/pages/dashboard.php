@@ -24,12 +24,10 @@
     <ul id="favoritesList" class="favorites-list"></ul>
 </section>
 
-<div class="search">
-    <label class="search-box">
-        <?= View::icon('search') ?>
-        <input id="siteSearch" type="search" placeholder="Buscar site em todos os servidores" autocomplete="off" aria-label="Buscar site em todos os servidores" aria-controls="searchResults">
-    </label>
-    <div id="searchResults" class="search-results" hidden></div>
-</div>
+<button type="button" class="search-trigger" data-action="palette" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /">
+    <?= View::icon('search') ?>
+    <span class="search-trigger-text">Buscar sites e comandos…</span>
+    <kbd data-shortcut aria-hidden="true">Ctrl K</kbd>
+</button>
 
 <section id="servers" class="grid" aria-live="polite" aria-busy="true"></section>

@@ -73,6 +73,13 @@ export function get(path, params) {
 
 export const post = (path, body) => request('POST', path, body);
 
+/** Encerra a sessão (real ou demo), apaga o cache da aba e volta para a página inicial. */
+export async function logout() {
+  await post('logout');
+  clearCache();
+  location.assign('./');
+}
+
 /**
  * Stale-while-revalidate: entrega o cache da aba (se válido) com `{stale:true}` e,
  * em seguida, a resposta nova com `{stale:false}`. Com `refresh`, ignora o cache e pede `refresh=1`.

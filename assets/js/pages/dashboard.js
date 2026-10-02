@@ -9,9 +9,6 @@ import { attentionItems, attentionCount } from '../attention.js';
 import * as favs from '../favorites.js';
 
 const grid = $('#servers');
-const search = $('#siteSearch');
-const results = $('#searchResults');
-let sites = [];
 // Último resultado de uso por servidor: re-renderizar os cards não volta os medidores ao skeleton.
 const usageBox = new Map();
 let loadSeq = 0;
@@ -48,7 +45,7 @@ async function load(refresh = false) {
 }
 
 function render(servers, cachedAt) {
-  sites = servers.flatMap((s) => (s.websites || []).map((w) => ({ ...w, orderId: s.orderId, serverTitle: s.title || 'Servidor' })));
+  const sites = servers.flatMap((s) => s.websites || []);
   setKpi('servers', servers.length);
   setKpi('sites', sites.length);
   setKpi('wordpress', sites.filter((s) => s.type === 'wordpress').length);
@@ -145,27 +142,6 @@ function renderFavorites() {
       iconButton('folder', 'Gerenciador de arquivos', () => openExternal('file-browser', { orderId: f.orderId, domain: f.domain })),
       iconButton('x', 'Remover dos favoritos', () => favs.toggle(f))))));
 }
-
-function showResults(query) {
-  const q = query.trim().toLowerCase();
-  if (q.length < 2) { results.hidden = true; return; }
-  const found = sites.filter((s) => s.domain.toLowerCase().includes(q)).slice(0, 10);
-  clear(results).append(...(found.length
-    ? found.map((s) => h('div', { class: 'result' },
-      h('a', { href: `server?orderId=${encodeURIComponent(s.orderId)}#sites` },
-        h('div', { class: 'result-domain' }, s.domain),
-        h('div', { class: 'result-server' }, s.serverTitle)),
-      h('div', { class: 'row' },
-        h('a', { class: 'btn btn-ghost btn-icon btn-sm', href: `https://${s.domain}`, target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Visitar site', 'data-tip': 'Visitar' }, icon('globe')),
-        h('a', { class: 'btn btn-ghost btn-icon btn-sm', href: `https://hpanel.hostinger.com/websites/${encodeURIComponent(s.domain)}`, target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Abrir no hPanel', 'data-tip': 'hPanel' }, icon('external')))))
-    : [h('div', { class: 'state' }, 'Nenhum site encontrado.')]));
-  results.hidden = false;
-}
-
-search.addEventListener('input', () => showResults(search.value));
-search.addEventListener('focus', () => showResults(search.value));
-search.addEventListener('keydown', (e) => { if (e.key === 'Escape') { search.value = ''; results.hidden = true; } });
-document.addEventListener('click', (e) => { if (!e.target.closest('.search')) results.hidden = true; });
 
 favs.subscribe(renderFavorites);
 renderFavorites();
