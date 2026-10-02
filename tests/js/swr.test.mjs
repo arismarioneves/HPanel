@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readCache, writeCache, CACHE_PREFIX } from '../../assets/js/swr.js';
+import { readCache, writeCache, sameData, CACHE_PREFIX } from '../../assets/js/swr.js';
 
 function memStorage() {
   const m = new Map();
@@ -40,4 +40,11 @@ test('setItem/getItem lançando não propaga', () => {
   const boom = { getItem() { throw new Error('x'); }, setItem() { throw new Error('QuotaExceededError'); } };
   assert.doesNotThrow(() => writeCache(boom, 'k', { a: 1 }, 1000));
   assert.equal(readCache(boom, 'k', 5000, 1000), null);
+});
+
+test('sameData ignora só o cachedAt de topo', () => {
+  assert.equal(sameData({ a: [1], cachedAt: 1 }, { a: [1], cachedAt: 2 }), true);
+  assert.equal(sameData({ a: [1], cachedAt: 1 }, { a: [2], cachedAt: 1 }), false);
+  assert.equal(sameData({ a: { cachedAt: 1 } }, { a: { cachedAt: 2 } }), false);
+  assert.equal(sameData(null, {}), false);
 });

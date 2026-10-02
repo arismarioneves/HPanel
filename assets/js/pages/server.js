@@ -1,5 +1,6 @@
 import '../app.js';
-import { cached, get, post } from '../api.js';
+import { cached, clearCache, get, post } from '../api.js';
+import { sameData } from '../swr.js';
 import { h, icon, $, clear, boot } from '../h.js';
 import { errorBlock, emptyBlock, skeletonLines } from '../states.js';
 import { toast } from '../toast.js';
@@ -54,11 +55,13 @@ async function init(refresh = false) {
   const p = panel(tab);
   loadError = null;
   clear(p).append(...skeletonLines(6));
-  let shown = false;
+  let shown = null;
   try {
     await cached('account', { orderId }, (data) => {
-      shown = true;
+      const same = shown && sameData(shown, data);
+      shown = data;
       detail = data;
+      if (same) { renderHead(); return; } // só o carimbo mudou: atualiza "Dados há X", sem redesenhar a aba
       rendered.clear();
       TABS.forEach((t) => clear(panel(t)));
       renderHead();
@@ -280,6 +283,7 @@ function phpCard() {
     save.setAttribute('aria-busy', 'true');
     try {
       await post('set-php-version', { orderId, domain, version });
+      clearCache();
       toast(`PHP ${version} ativado em ${domain}.`, 'ok');
       await load();
     } catch (err) {
@@ -296,6 +300,13 @@ function phpCard() {
   return section('Versão do PHP', h('div', { class: 'card stack' },
     h('div', { class: 'grid' }, h('div', {}, h('label', { class: 'label' }, 'Domínio'), domainSel), h('div', {}, h('label', { class: 'label' }, 'Versão'), versionSel)),
     h('div', { class: 'row' }, save, status)));
+}
+
+/** Cria/recria a chave SSH e invalida o cache da aba (os dados da conta podem ter mudado). */
+async function mutateSshKey(action) {
+  const res = await post('ssh-key', { orderId, action });
+  clearCache();
+  return res;
 }
 
 function sshCard() {
@@ -316,7 +327,7 @@ function sshCard() {
       clear(body).append(
         h('p', {}, 'Esta conta ainda não tem chave SSH para deploy via Git.'),
         h('p', { class: 'hint' }, 'Ao criar, o hPanel volta a exibir o deploy via SSH (em vez do GitHub App) para os sites desta conta.'),
-        h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn btn-primary', on: { click: () => run(() => post('ssh-key', { orderId, action: 'create' })) } }, icon('key'), 'Criar chave SSH')));
+        h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn btn-primary', on: { click: () => run(() => mutateSshKey('create')) } }, icon('key'), 'Criar chave SSH')));
       return;
     }
     clear(body).append(
@@ -328,7 +339,7 @@ function sshCard() {
           on: {
             click: async () => {
               const ok = await confirmDialog('Recriar a chave SSH?', 'A chave atual deixa de funcionar. Depois, atualize-a no GitHub/GitLab onde ela estiver cadastrada.', 'Recriar', 'danger');
-              if (ok) run(() => post('ssh-key', { orderId, action: 'recreate' }));
+              if (ok) run(() => mutateSshKey('recreate'));
             },
           },
         }, icon('refresh'), 'Recriar')));

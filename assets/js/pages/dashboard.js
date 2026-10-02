@@ -1,5 +1,6 @@
 import '../app.js';
 import { cached } from '../api.js';
+import { sameData } from '../swr.js';
 import { h, icon, $, $$, clear, on } from '../h.js';
 import { errorBlock, emptyBlock, skeletonCards } from '../states.js';
 import { meter, badge } from '../components.js';
@@ -18,14 +19,15 @@ const setKpi = (key, value) => { $(`[data-kpi="${key}"]`).textContent = String(v
 async function load(refresh = false) {
   const seq = ++loadSeq;
   const requested = new Set();
-  let shown = false;
+  let shown = null;
   grid.setAttribute('aria-busy', 'true');
   if (refresh) usageBox.clear();
   clear(grid).append(...skeletonCards(6));
   try {
     await cached('websites', undefined, (data) => {
       if (seq !== loadSeq) return;
-      shown = true;
+      if (shown && sameData(shown, data)) { $('#freshness').textContent = `Atualizado ${relTime(data.cachedAt)}`; return; }
+      shown = data;
       render(data.servers, data.cachedAt);
       loadUsage(data.servers.filter((s) => !requested.has(s.orderId)), refresh, seq);
       data.servers.forEach((s) => requested.add(s.orderId));
@@ -79,9 +81,12 @@ const note = (text) => () => [h('span', { class: 'muted small' }, text)];
 function loadUsage(servers, refresh, seq) {
   return Promise.allSettled(servers.map(async (s) => {
     if (!(s.websites || []).length) { showUsage(s.orderId, note('Sem sites ainda')); return; }
+    let prev = null;
     try {
-      await cached('usage', { orderId: s.orderId }, ({ usage }) => {
-        if (seq !== loadSeq) return;
+      await cached('usage', { orderId: s.orderId }, (data) => {
+        if (seq !== loadSeq || (prev && sameData(prev, data))) return;
+        prev = data;
+        const { usage } = data;
         const keys = [['storage', 'Disco', 'mb'], ['inodes', 'Inodes', 'n']].filter(([key]) => usage?.[key]?.limit > 0);
         showUsage(s.orderId, keys.length
           ? () => keys.map(([key, label, fmt]) => meter(label, usage[key].value, usage[key].limit, fmt, true))

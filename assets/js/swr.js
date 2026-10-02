@@ -21,3 +21,14 @@ export function writeCache(storage, key, value, now = Date.now()) {
     storage.setItem(CACHE_PREFIX + key, JSON.stringify({ savedAt: now, value }));
   } catch { /* quota excedida ou storage indisponível */ }
 }
+
+const withoutStamp = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? { ...v, cachedAt: undefined } : v);
+
+/** Mesmo conteúdo, ignorando o `cachedAt` de topo (só o carimbo mudou → não precisa redesenhar). */
+export function sameData(a, b) {
+  try {
+    return JSON.stringify(withoutStamp(a)) === JSON.stringify(withoutStamp(b));
+  } catch {
+    return false;
+  }
+}
