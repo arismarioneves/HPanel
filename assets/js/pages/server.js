@@ -12,6 +12,7 @@ const { orderId } = boot();
 const TABS = ['visao', 'sites', 'bancos', 'ferramentas'];
 const rendered = new Set();
 let detail = null;
+let loadError = null;
 let phpDomain = null;
 let phpControls = null;
 
@@ -28,27 +29,37 @@ const FILTERS = [
 const currentTab = () => (TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'visao');
 const panel = (tab) => $(`#panel-${tab}`);
 
-function showTab() {
+function highlightTab() {
   const tab = currentTab();
   for (const t of TABS) {
     $(`[data-tab="${t}"]`).setAttribute('aria-selected', String(t === tab));
     panel(t).hidden = t !== tab;
   }
+  return tab;
+}
+
+function showTab() {
+  const tab = highlightTab();
   if (detail && !rendered.has(tab)) {
     rendered.add(tab);
     RENDER[tab](panel(tab));
+  } else if (!detail && loadError) {
+    clear(panel(tab)).append(errorBlock(loadError, () => init()));
   }
 }
 
 async function init(refresh = false) {
-  const p = panel(currentTab());
-  p.hidden = false;
+  const tab = highlightTab();
+  const p = panel(tab);
+  loadError = null;
   clear(p).append(...skeletonLines(6));
   try {
     detail = await get('account', refresh ? { orderId, refresh: 1 } : { orderId });
   } catch (err) {
+    loadError = err;
     clear(p).append(errorBlock(err, () => init(refresh)));
-    $('#serverTitle').textContent = 'Servidor';
+    if (detail) rendered.delete(tab);
+    else $('#serverTitle').textContent = 'Servidor';
     return;
   }
   rendered.clear();
@@ -234,20 +245,26 @@ function phpCard() {
   if (phpDomain && domains.includes(phpDomain)) domainSel.value = phpDomain;
 
   async function load() {
+    const domain = domainSel.value;
+    domainSel.disabled = true;
     versionSel.disabled = true;
     save.disabled = true;
     clear(versionSel).append(h('option', {}, 'Carregando…'));
     status.textContent = '';
     try {
-      const v = await get('php-version', { orderId, domain: domainSel.value });
+      const v = await get('php-version', { orderId, domain });
+      if (domainSel.value !== domain) return;
       clear(versionSel).append(...v.versions.map((x) => h('option', { value: x.version }, x.version === v.current ? `PHP ${x.version} (atual)` : x.label)));
       if (v.current) versionSel.value = v.current;
       status.textContent = v.current ? `Em uso: PHP ${v.currentFull || v.current}` : '';
       versionSel.disabled = false;
       save.disabled = false;
     } catch (err) {
+      if (domainSel.value !== domain) return;
       clear(versionSel).append(h('option', {}, 'Indisponível'));
       status.textContent = err.message;
+    } finally {
+      if (domainSel.value === domain) domainSel.disabled = false;
     }
   }
 
