@@ -22,10 +22,10 @@ use HPanel\View;
 <body data-page="<?= View::e($page) ?>">
     <a class="skip-link" href="#main">Pular para o conteúdo</a>
     <?php require __DIR__ . '/header.php'; ?>
-    <main id="main" class="container">
+    <main id="main" class="container" tabindex="-1">
         <?php require $bodyFile; ?>
     </main>
-    <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+    <div id="toasts" class="toasts"></div>
     <script type="application/json" id="boot"><?= $bootJson ?></script>
 </body>
 </html>

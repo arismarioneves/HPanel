@@ -28,7 +28,8 @@ export function openModal({ title, content, actions = [], wide = false }) {
     dialog.addEventListener('click', (e) => { if (e.target === dialog) close(null); });
     document.body.append(dialog);
     dialog.showModal();
-    dialog.querySelector('.modal-foot .btn:last-child')?.focus();
+    const hasDanger = actions.some((a) => a.variant === 'danger');
+    dialog.querySelector(hasDanger ? '.modal-foot .btn:first-child' : '.modal-foot .btn:last-child')?.focus();
   });
 }
 

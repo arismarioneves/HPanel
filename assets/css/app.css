@@ -53,6 +53,7 @@ kbd { padding: 1px 6px; border: 1px solid var(--border-strong); border-bottom-wi
 .stack { display: grid; gap: var(--s4); }
 .row { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
 .skip-link { position: absolute; left: -999px; top: var(--s2); }
+main:focus { outline: none; }
 .skip-link:focus { left: var(--s2); z-index: 100; background: var(--surface); padding: var(--s2) var(--s3); border-radius: var(--r1); }
 .i { width: 18px; height: 18px; flex: none; }
 [data-theme='light'] .only-dark, [data-theme='dark'] .only-light { display: none; }
@@ -219,6 +220,7 @@ textarea.input { resize: vertical; }
 /* ===== Toasts ===== */
 .toasts { position: fixed; right: var(--s4); bottom: var(--s4); z-index: 60; display: grid; gap: var(--s2); width: min(380px, 100% - 2 * var(--s4)); }
 .toast { display: flex; gap: var(--s2); align-items: flex-start; padding: var(--s3) var(--s4); border-radius: var(--r2); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); animation: toast-in var(--t) ease-out; }
+.toast > span { flex: 1; }
 .toast .i { margin-top: 2px; }
 .toast-ok .i { color: var(--ok); }
 .toast-warn .i { color: var(--warn); }

@@ -7,9 +7,14 @@ export function toast(message, variant = 'info', ms = 4000) {
   if (!box) return;
   const el = h('div', { class: `toast toast-${variant}`, role: variant === 'danger' ? 'alert' : 'status' },
     icon(ICONS[variant] || 'info'), h('span', {}, message));
-  box.append(el);
-  setTimeout(() => {
+  let gone = false;
+  const dismiss = () => {
+    if (gone) return;
+    gone = true;
     el.classList.add('leaving');
     setTimeout(() => el.remove(), 220);
-  }, ms);
+  };
+  el.append(h('button', { type: 'button', class: 'btn btn-ghost btn-icon btn-sm', 'aria-label': 'Fechar', on: { click: dismiss } }, icon('x')));
+  box.append(el);
+  if (variant !== 'danger') setTimeout(dismiss, ms);
 }
