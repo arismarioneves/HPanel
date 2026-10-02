@@ -87,7 +87,7 @@ final class HostingerSource implements DataSource
 
     public function createGitKey(string $username, string $domain, int $orderId): string
     {
-        $r = $this->raw('POST', self::accountPath($username) . '/git-key', self::scope($username, $domain, $orderId), []);
+        $r = $this->raw('POST', self::accountPath($username) . '/git-key', self::scope($username, $domain, $orderId));
         $key = $r['json']['data']['publicKey'] ?? null;
         if ($r['status'] >= 200 && $r['status'] < 300 && is_string($key) && $key !== '') {
             return $key;

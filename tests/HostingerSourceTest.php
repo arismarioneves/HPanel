@@ -96,6 +96,7 @@ final class HostingerSourceTest extends TestCase
         ]);
         self::assertSame('ssh-rsa AAA', (new HostingerSource($http, 't', ''))->createGitKey('u', 'd.com', 1));
         self::assertSame('POST', $http->calls[0]['method']);
+        self::assertSame('{}', $http->calls[0]['body']);
         self::assertSame('GET', $http->calls[1]['method']);
     }
 
