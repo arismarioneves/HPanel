@@ -20,6 +20,9 @@ use HPanel\View;
             <?php if ($connected): ?>
                 <a href="settings" class="btn btn-ghost btn-icon" aria-label="Configurações" data-tip="Configurações"<?= $page === 'settings' ? ' aria-current="page"' : '' ?>><?= View::icon('settings') ?></a>
             <?php endif; ?>
+            <?php if ($page === 'landing'): ?>
+                <a href="connect" class="btn btn-primary btn-sm topbar-cta">Entrar</a>
+            <?php endif; ?>
         </nav>
     </div>
 </header>

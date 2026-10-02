@@ -1,5 +1,6 @@
 import '../app.js';
 import { clearCache, post } from '../api.js';
+import { startDemo } from '../demo.js';
 import { $, on } from '../h.js';
 import { inspectToken } from '../jwt.js';
 import { toast } from '../toast.js';
@@ -65,17 +66,7 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-on(document, 'demo', async (event, button) => {
-  busy(button, true);
-  try {
-    await post('demo');
-    clearCache();
-    location.assign('./');
-  } catch (err) {
-    busy(button, false);
-    toast(err.message, 'danger');
-  }
-});
+on(document, 'demo', startDemo);
 
 check();
 input.focus();
