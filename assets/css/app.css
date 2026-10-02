@@ -213,7 +213,6 @@ textarea.input { resize: vertical; }
 .site-domain { display: inline-flex; align-items: center; gap: var(--s1); font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
 .site-meta { color: var(--muted); font-size: .8rem; }
 .site-actions { display: flex; gap: var(--s1); }
-.i-main { color: var(--warn); width: 14px; height: 14px; }
 .site-children { border-top: 1px dashed var(--border); padding: var(--s2) var(--s4) var(--s3) var(--s6); display: grid; gap: var(--s2); }
 .site-children .site { border-style: dashed; }
 .site-dbs { border-top: 1px solid var(--border); padding: var(--s3) var(--s4); background: var(--surface-2); border-radius: 0 0 var(--r2) var(--r2); }
