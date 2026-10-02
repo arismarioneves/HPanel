@@ -6,7 +6,7 @@ namespace HPanel;
 
 final class Validate
 {
-    private const DOMAIN = '/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$/';
+    private const DOMAIN = '/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$/D';
 
     public static function orderId(mixed $v): int
     {
@@ -30,7 +30,7 @@ final class Validate
 
     public static function dbName(mixed $v): string
     {
-        if (is_string($v) && preg_match('/^[A-Za-z0-9_]{1,64}$/', $v) === 1) {
+        if (is_string($v) && preg_match('/^[A-Za-z0-9_]{1,64}$/D', $v) === 1) {
             return $v;
         }
         throw ApiError::invalid('Banco de dados inválido.');
@@ -38,7 +38,7 @@ final class Validate
 
     public static function phpVersion(mixed $v): string
     {
-        if (is_string($v) && preg_match('/^\d{1,2}\.\d{1,2}$/', $v) === 1) {
+        if (is_string($v) && preg_match('/^\d{1,2}\.\d{1,2}$/D', $v) === 1) {
             return $v;
         }
         throw ApiError::invalid('Versão PHP inválida.');

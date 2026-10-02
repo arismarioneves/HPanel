@@ -63,6 +63,18 @@ final class ValidateTest extends TestCase
         Validate::phpVersion('8.2; rm');
     }
 
+    public function testDbNameRejectsTrailingNewline(): void
+    {
+        $this->expectException(ApiError::class);
+        Validate::dbName("u1_db\n");
+    }
+
+    public function testPhpVersionRejectsTrailingNewline(): void
+    {
+        $this->expectException(ApiError::class);
+        Validate::phpVersion("8.2\n");
+    }
+
     public function testJwtTrimsAndRejectsNonTokens(): void
     {
         $t = TestJwt::make(2000000000);

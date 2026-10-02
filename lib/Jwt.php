@@ -6,7 +6,7 @@ namespace HPanel;
 
 final class Jwt
 {
-    private const SHAPE = '/^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/';
+    private const SHAPE = '/^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/D';
 
     public static function isWellFormed(string $token): bool
     {
