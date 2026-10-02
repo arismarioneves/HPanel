@@ -60,8 +60,6 @@ cp config.exemplo.php config.php
 
 3. **Acesse o dashboard** no navegador e **configure o token JWT** na página de Configurações.
 
-> **Atualização:** Ao atualizar de uma versão antiga, apague a pasta cookies/ (sessões antigas em texto puro).
-
 ### Nginx
 
 No Apache o `.htaccess` já bloqueia tudo que não é público. No Nginx, use o bloco equivalente (instalação na **raiz** do domínio, `base => '/'`):
