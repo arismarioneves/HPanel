@@ -335,5 +335,12 @@ function sshCard() {
 
 const RENDER = { visao: renderVisao, sites: renderSites, bancos: renderBancos, ferramentas: renderFerramentas };
 
+// <base href> faria "#aba" navegar para a raiz; troca o hash da URL atual.
+document.querySelector('.tabs').addEventListener('click', (event) => {
+  const link = event.target.closest('[data-tab]');
+  if (!link) return;
+  event.preventDefault();
+  location.hash = link.dataset.tab;
+});
 window.addEventListener('hashchange', showTab);
 init();
