@@ -34,6 +34,20 @@ final class ConfigTest extends TestCase
         self::assertSame('/painel/', $second->base, 'base existente é preservada');
     }
 
+    public function testMalformedSecretIsRejectedNotReplaced(): void
+    {
+        $src = "<?php return ['app_secret' => 'curto'];";
+        file_put_contents($this->dir . '/config.php', $src);
+
+        try {
+            Config::load($this->dir);
+            self::fail('esperava ConfigException');
+        } catch (\HPanel\ConfigException $e) {
+            self::assertStringContainsString('app_secret inválido', $e->getMessage());
+        }
+        self::assertSame($src, file_get_contents($this->dir . '/config.php'), 'config.php não é sobrescrito');
+    }
+
     public function testNormalizesBaseAndDefaultsStorage(): void
     {
         $c = Config::fromArray(['base' => '\\sub\\pasta\\', 'app_secret' => str_repeat('ab', 32)], '/raiz');

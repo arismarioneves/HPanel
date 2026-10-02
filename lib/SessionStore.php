@@ -96,6 +96,12 @@ final class SessionStore
                 $removed++;
             }
         }
+        foreach (glob($this->dir . '/*.tmp') ?: [] as $tmp) {
+            $mtime = @filemtime($tmp);
+            if ($mtime !== false && $now - $mtime > 3600 && @unlink($tmp)) {
+                $removed++;
+            }
+        }
         return $removed;
     }
 

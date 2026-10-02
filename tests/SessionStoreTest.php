@@ -85,7 +85,16 @@ final class SessionStoreTest extends TestCase
         $this->store->save('morta', ['token' => TestJwt::make($now - SessionStore::DEAD_TOKEN_TTL - 1)], $now - 60);
         $this->store->save('demo', ['demo' => true], $now - 60);
 
-        self::assertSame(2, $this->store->gc($now));
+        $oldTmp = $this->dir . '/velho.json.abcd1234.tmp';
+        file_put_contents($oldTmp, 'x');
+        touch($oldTmp, $now - 3601);
+        $newTmp = $this->dir . '/novo.json.abcd1234.tmp';
+        file_put_contents($newTmp, 'x');
+        touch($newTmp, $now - 60);
+
+        self::assertSame(3, $this->store->gc($now));
+        self::assertFileDoesNotExist($oldTmp);
+        self::assertFileExists($newTmp);
         self::assertNotNull($this->store->load('ativa'));
         self::assertNotNull($this->store->load('demo'));
         self::assertNull($this->store->load('parada'));
