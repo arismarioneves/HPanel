@@ -1,40 +1,12 @@
 <?php
 
-/**
- * Websites API endpoint
- * Returns list of servers and websites
- */
+declare(strict_types=1);
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Headers: X-Session-Hash, Content-Type');
+require __DIR__ . '/../lib/autoload.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
+use HPanel\{Context, Http, Request};
 
-require_once __DIR__ . '/HostingerClient.php';
-
-try {
-    $client = new HostingerClient();
-    $data = $client->getWebsites();
-
-    if ($data && isset($data['data'])) {
-        echo json_encode([
-            'success' => true,
-            'data' => $data['data']['resources'] ?? []
-        ]);
-    } else {
-        http_response_code(401);
-        echo json_encode([
-            'success' => false,
-            'error' => 'Failed to fetch websites'
-        ]);
-    }
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
-}
+Http::handle(['GET'], static function (Request $req, Context $ctx): array {
+    $r = $ctx->catalog->servers($req->flag('refresh'));
+    return ['servers' => $r['value'], 'cachedAt' => $r['cachedAt']];
+});
