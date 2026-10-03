@@ -162,7 +162,8 @@ textarea.input { resize: vertical; }
 .attention { margin-bottom: var(--s5); padding: var(--s3) var(--s4); border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border)); border-radius: var(--r3); background: color-mix(in srgb, var(--warn) 6%, var(--surface)); }
 .attention-head { display: flex; align-items: center; gap: var(--s2); font-size: .95rem; margin-bottom: var(--s2); }
 .attention-head .i { color: var(--warn); }
-.attention-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s1); }
+.attention-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s1); }
+.attention-list > li { min-width: 0; }
 .attention-item { display: flex; align-items: center; gap: var(--s2); min-width: 0; padding: var(--s2); border-radius: var(--r2); color: var(--text); }
 .attention-item:hover { text-decoration: none; background: var(--surface-2); }
 .attention-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
@@ -372,6 +373,7 @@ body.is-offline [data-action], body.is-offline .btn-primary { pointer-events: no
 @media (max-width: 639px) {
   h1 { font-size: 1.35rem; }
   .card { padding: var(--s4); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .brand-name { display: none; }
   .session-slot { margin-right: 0; }
   .session-pill { padding: 0 var(--s2); }

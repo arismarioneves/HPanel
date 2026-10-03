@@ -30,7 +30,8 @@ function closePop(focusPill = false) {
 
 function openPop() {
   const state = pillState(session);
-  clear(pop).append(
+  // Element.append(null) vira o texto "null": filtra as linhas opcionais.
+  clear(pop).append(...[
     h('p', { class: 'session-pop-title' }, h('span', { class: `dot dot-${state.tone}`, 'aria-hidden': 'true' }), state.label),
     h('p', { class: 'muted' }, validity(session, state)),
     state.kind === 'ok' ? h('p', { class: 'muted' }, 'Renova sozinho enquanto você usa o painel.') : null,
@@ -40,7 +41,7 @@ function openPop() {
         : null,
       h('a', { href: 'settings', class: 'btn btn-ghost btn-sm' }, icon('settings'), 'Configurações'),
       h('button', { type: 'button', class: 'btn btn-ghost btn-sm', 'data-action': 'logout' }, icon('logout'), session.demo ? 'Sair do demo' : 'Sair')),
-  );
+  ].filter(Boolean));
   pop.hidden = false;
   pill.setAttribute('aria-expanded', 'true');
   pop.querySelector('button, a')?.focus();
