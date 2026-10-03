@@ -17,6 +17,7 @@ export function setThemeMode(mode) {
     else localStorage.removeItem(KEY);
   } catch { /* ignora */ }
   apply(mode === 'light' || mode === 'dark' ? mode : systemTheme());
+  document.dispatchEvent(new CustomEvent('hp:theme', { detail: { mode: themeMode() } }));
 }
 
 export function toggleTheme() {

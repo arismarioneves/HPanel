@@ -12,6 +12,9 @@ export class ApiError extends Error {
 const inflight = new Map();
 const RETRY_DELAY = 1500;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Falha de revalidação avisa no máximo uma vez a cada 10 s (o dashboard revalida N endpoints de uma vez).
+const STALE_TOAST_MS = 10000;
+let staleToastAt = -Infinity;
 
 // Páginas que funcionam sem sessão: não redirecionam em `not_connected`.
 const STAY_PAGES = new Set(['landing', 'connect']);
@@ -96,7 +99,10 @@ export async function cached(path, params, onData, { maxAgeMs = 300000, refresh 
   } catch (err) {
     if (!hit) throw err;
     console.warn(`Falha ao revalidar ${key}`, err);
-    toast('Não foi possível atualizar agora.', 'warn');
+    if (Date.now() - staleToastAt >= STALE_TOAST_MS) {
+      staleToastAt = Date.now();
+      toast('Não foi possível atualizar agora.', 'warn');
+    }
     return;
   }
   if (storage) writeCache(storage, key, fresh);

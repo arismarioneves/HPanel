@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createFavorites, FAVS_KEY, MAX_FAVS } from '../../assets/js/favorites.js';
+import { createFavorites, inServers, FAVS_KEY, MAX_FAVS } from '../../assets/js/favorites.js';
 
 function memStorage() {
   const m = new Map();
@@ -87,4 +87,22 @@ test('subscribe: avisa na mesma aba e em evento storage de hp_favs; cancelar par
   f.toggle(fav(1));
   target.dispatchEvent(ev(FAVS_KEY));
   assert.equal(calls, 3);
+});
+
+test('clear apaga todos os favoritos e avisa os inscritos', () => {
+  const s = memStorage();
+  const f = createFavorites(s);
+  f.toggle(fav(1));
+  let calls = 0;
+  f.subscribe(() => { calls++; });
+  f.clear();
+  assert.deepEqual(f.list(), []);
+  assert.equal(s.map.has(FAVS_KEY), false);
+  assert.equal(calls, 1);
+});
+
+test('inServers mantém só favoritos de domínios presentes nos servidores carregados', () => {
+  const servers = [{ orderId: 101, websites: [{ domain: 'site1.example' }] }, { orderId: 9, websites: [] }];
+  assert.deepEqual(inServers([fav(1), fav(2)], servers), [fav(1)]);
+  assert.deepEqual(inServers([fav(1)], null), []);
 });

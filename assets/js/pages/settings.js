@@ -1,7 +1,9 @@
 import '../app.js';
 import { clearCache, get, post } from '../api.js';
-import { h, icon, $, $$, clear, on } from '../h.js';
+import { h, icon, $, $$, clear } from '../h.js';
 import { setThemeMode, themeMode } from '../theme.js';
+import * as favs from '../favorites.js';
+import { clearRecent } from '../palette.js';
 import { toast } from '../toast.js';
 import { confirmDialog } from '../modal.js';
 
@@ -97,7 +99,15 @@ const syncTheme = () => {
   radios.forEach((r) => { r.checked = r.value === mode; });
 };
 radios.forEach((r) => r.addEventListener('change', () => { if (r.checked) setThemeMode(r.value); }));
-on(document, 'toggle-theme', syncTheme); // o botão do topo grava claro/escuro
+document.addEventListener('hp:theme', syncTheme); // tema trocado pelo botão do topo, pela paleta ou aqui
 syncTheme();
+
+// Favoritos e itens recentes guardados neste navegador.
+$('#clearFavs').addEventListener('click', async () => {
+  if (!(await confirmDialog('Limpar favoritos e recentes?', 'Os sites favoritos e os itens abertos recentemente na busca são esquecidos neste navegador.', 'Limpar', 'danger'))) return;
+  favs.clear();
+  clearRecent();
+  toast('Favoritos e recentes apagados.', 'ok');
+});
 
 refresh();

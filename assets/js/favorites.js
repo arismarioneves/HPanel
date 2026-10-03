@@ -41,6 +41,11 @@ export function createFavorites(storage, target) {
     return i < 0;
   }
 
+  function clear() {
+    try { storage.removeItem(FAVS_KEY); } catch { return; }
+    listeners.forEach((fn) => fn());
+  }
+
   // key null = localStorage.clear() em outra aba.
   target?.addEventListener('storage', (e) => {
     if (e.key === FAVS_KEY || e.key === null) listeners.forEach((fn) => fn());
@@ -52,11 +57,17 @@ export function createFavorites(storage, target) {
     return () => listeners.delete(fn);
   }
 
-  return { list, has, toggle, subscribe };
+  return { list, has, toggle, clear, subscribe };
+}
+
+/** Só os favoritos cujo domínio está nos servidores carregados (conta atual ou demo); `null` = nada carregado. */
+export function inServers(items, servers) {
+  const domains = new Set((servers || []).flatMap((s) => (s.websites || []).map((w) => w.domain)));
+  return items.filter((f) => domains.has(f.domain));
 }
 
 function localStore() {
   try { return globalThis.localStorage ?? null; } catch { return null; } // acesso pode lançar (SecurityError)
 }
 
-export const { list, has, toggle, subscribe } = createFavorites(localStore(), globalThis.window);
+export const { list, has, toggle, clear, subscribe } = createFavorites(localStore(), globalThis.window);

@@ -30,6 +30,11 @@ function pushRecent(id) {
   } catch { /* storage indisponível ou cheio */ }
 }
 
+/** Esquece os itens abertos recentemente (botão em Configurações). */
+export function clearRecent() {
+  try { localStorage.removeItem(RECENT_KEY); } catch { /* storage indisponível */ }
+}
+
 let dialog, input, list, status, actionsBox, actionsList;
 let servers = null; // null = sites ainda não carregados nesta página
 let loading = false;
@@ -88,13 +93,12 @@ function commands() {
   ];
 }
 
-/** Sites (da conta + favoritos ainda não carregados), servidores e comandos; ids únicos. */
+/** Sites e servidores da conta carregada (favoritos/recentes de outra conta ou do demo ficam de fora), comandos; ids únicos. */
 function allItems() {
   const items = new Map();
   for (const s of servers || []) {
     for (const w of s.websites || []) items.set(`site:${w.domain}`, siteItem(w.domain, s.orderId, s.title));
   }
-  for (const f of favs.list()) if (!items.has(`site:${f.domain}`)) items.set(`site:${f.domain}`, siteItem(f.domain, f.orderId, f.serverTitle));
   for (const s of servers || []) items.set(`server:${s.orderId}`, serverItem(s));
   for (const c of commands()) items.set(c.id, c);
   return [...items.values()];

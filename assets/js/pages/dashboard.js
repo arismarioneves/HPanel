@@ -16,6 +16,8 @@ let loadSeq = 0;
 const attention = new Map();
 // Servidores com uso ainda sem nenhuma resposta: o KPI fica em "–" até zerar.
 const pending = new Set();
+// Servidores do último `websites` exibido: os favoritos mostrados se limitam a eles.
+let loadedServers = null;
 
 const setKpi = (key, value) => { $(`[data-kpi="${key}"]`).textContent = String(value); };
 
@@ -45,6 +47,8 @@ async function load(refresh = false) {
 }
 
 function render(servers, cachedAt) {
+  loadedServers = servers;
+  renderFavorites();
   const sites = servers.flatMap((s) => s.websites || []);
   setKpi('servers', servers.length);
   setKpi('sites', sites.length);
@@ -129,7 +133,7 @@ const extLink = (href, label, name) =>
   h('a', { class: 'btn btn-ghost btn-icon btn-sm', href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': label, 'data-tip': label }, icon(name));
 
 function renderFavorites() {
-  const items = favs.list();
+  const items = favs.inServers(favs.list(), loadedServers);
   $('#favorites').hidden = !items.length;
   clear($('#favoritesList')).append(...items.map((f) => h('li', { class: 'fav' },
     h('div', { class: 'fav-id' },

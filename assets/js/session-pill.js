@@ -112,6 +112,10 @@ if (slot) {
   document.addEventListener('click', (event) => {
     if (!slot.contains(event.target)) closePop();
   });
+  // Tab/foco saindo do popover (para fora da pill e do pop) fecha sem roubar o foco.
+  slot.addEventListener('focusout', (event) => {
+    if (!event.relatedTarget || !slot.contains(event.relatedTarget)) closePop();
+  });
   slot.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !pop.hidden) {
       event.stopPropagation();

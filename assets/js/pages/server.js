@@ -208,7 +208,7 @@ const favTip = (on) => (on ? 'Remover dos favoritos' : 'Adicionar aos favoritos'
 function starButton(domain) {
   const on = favs.has(domain);
   return h('button', {
-    type: 'button', class: 'btn btn-ghost btn-icon btn-sm fav-btn', 'aria-label': 'Favorito', 'aria-pressed': String(on),
+    type: 'button', class: 'btn btn-ghost btn-icon btn-sm fav-btn', 'aria-label': `Favorito: ${domain}`, 'aria-pressed': String(on),
     'data-tip': favTip(on), dataset: { fav: domain },
     on: {
       click: () => {
