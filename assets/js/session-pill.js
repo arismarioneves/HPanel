@@ -98,7 +98,8 @@ async function refresh() {
 
 if (slot) {
   pill = h('button', { type: 'button', class: 'session-pill', 'aria-expanded': 'false', 'aria-controls': 'session-pop' });
-  pop = h('div', { id: 'session-pop', class: 'session-pop', role: 'group', 'aria-label': 'Sessão', hidden: true });
+  // tabindex -1: clique em texto do pop move o foco para ele (relatedTarget continua dentro do slot).
+  pop = h('div', { id: 'session-pop', class: 'session-pop', role: 'group', 'aria-label': 'Sessão', tabindex: '-1', hidden: true });
   slot.append(pill, pop);
 
   pill.addEventListener('click', () => {
@@ -112,9 +113,9 @@ if (slot) {
   document.addEventListener('click', (event) => {
     if (!slot.contains(event.target)) closePop();
   });
-  // Tab/foco saindo do popover (para fora da pill e do pop) fecha sem roubar o foco.
+  // Foco indo para fora (Tab) fecha; relatedTarget nulo é clique fora, já tratado acima.
   slot.addEventListener('focusout', (event) => {
-    if (!event.relatedTarget || !slot.contains(event.relatedTarget)) closePop();
+    if (event.relatedTarget && !slot.contains(event.relatedTarget)) closePop();
   });
   slot.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !pop.hidden) {
