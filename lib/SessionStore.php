@@ -45,7 +45,8 @@ final class SessionStore
         $env = [
             'v' => 1,
             'touched' => $now,
-            'exp' => is_string($token) ? Jwt::expiry($token) : null,
+            // Demo não tem token: exp = último uso, então o GC a remove após 24 h parada.
+            'exp' => is_string($token) ? Jwt::expiry($token) : (($data['demo'] ?? false) === true ? $now : null),
             'data' => Crypto::seal(
                 json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
                 Crypto::key($sid, $this->secret)

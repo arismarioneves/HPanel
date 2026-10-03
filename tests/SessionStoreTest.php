@@ -101,6 +101,17 @@ final class SessionStoreTest extends TestCase
         self::assertNull($this->store->load('morta'));
     }
 
+    public function testGcRemovesDemoSessionsIdleOverADay(): void
+    {
+        $now = 10_000_000;
+        $this->store->save('demo-velha', ['demo' => true], $now - SessionStore::DEAD_TOKEN_TTL - 1);
+        $this->store->save('demo-nova', ['demo' => true], $now - 3600);
+
+        self::assertSame(1, $this->store->gc($now));
+        self::assertNull($this->store->load('demo-velha'));
+        self::assertNotNull($this->store->load('demo-nova'));
+    }
+
     public function testUnwritableDirMessageHidesPath(): void
     {
         $file = tempnam(sys_get_temp_dir(), 'hpfile');

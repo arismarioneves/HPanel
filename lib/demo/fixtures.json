@@ -424,7 +424,7 @@
         "hostname": "eu-lt-cloud031.example",
         "database": {
           "hostname": "db-eu-lt-cloud031.example",
-          "ip": "203.0.113.312"
+          "ip": "203.0.113.31"
         }
       },
       "usage": {
@@ -470,7 +470,7 @@
         "hostname": "eu-lt-web058.example",
         "database": {
           "hostname": "db-eu-lt-web058.example",
-          "ip": "203.0.113.413"
+          "ip": "203.0.113.41"
         }
       },
       "usage": {
