@@ -30,11 +30,11 @@ Painel para gerenciar todos os seus sites da Hostinger em um só lugar, sem nave
 
 ## 🧪 Modo demonstração
 
-O botão **Ver demonstração** na página inicial abre o painel completo com dados fictícios (`lib/demo/fixtures.json`, domínios `.example`). Nenhuma chamada é feita à Hostinger e ações que alteram algo (versão PHP, chave SSH) ficam indisponíveis. Para sair, use **Conectar** ou **Sair**.
+O botão **Ver demonstração** na página inicial abre o painel completo com dados fictícios (`lib/demo/fixtures.json`, domínios `.example`). Nenhuma chamada é feita à Hostinger e ações que alteram algo (versão PHP, chave SSH) ficam indisponíveis. Para sair, use **Conectar sua conta** ou **Sair do demo**.
 
 ## ⌨️ Busca Ctrl+K
 
-`Ctrl+K` (ou `⌘K`, ou `/` fora de campos de texto) abre a paleta de busca. Use `↑`/`↓` para navegar, `Enter` para abrir e `Esc` para fechar. Em um site, `Tab` mostra as ações rápidas — **Visitar**, **hPanel**, **Arquivos**, **Servidor** — escolhidas com `←`/`→`. Buscas recentes ficam salvas no navegador.
+`Ctrl+K` (ou `⌘K`, ou `/` fora de campos de texto) abre a paleta de busca. Use `↑`/`↓` para navegar, `Enter` para abrir e `Esc` para fechar. Em um site, `Tab` mostra as ações rápidas — **Visitar**, **hPanel**, **Arquivos**, **Servidor** — escolhidas com `←`/`→`. Os itens abertos recentemente e os favoritos ficam salvos no navegador (só aparecem os da conta carregada); **Limpar favoritos e recentes** fica em Configurações.
 
 ## ⭐ Favoritos
 
@@ -82,7 +82,7 @@ cp config.exemplo.php config.php
    - Ajuste `base` (ex.: `'/hpanel/'`) se o painel estiver em uma subpasta.
    - Recomendado: aponte `storage_dir` para uma pasta **fora** da pasta pública.
 
-3. **Acesse o dashboard** no navegador e **configure o token JWT** na página de Configurações.
+3. **Abra o painel** no navegador e clique em **Conectar** (ou **Ver demonstração**).
 
 ### Nginx
 
