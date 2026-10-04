@@ -1,9 +1,6 @@
 /docs
 /config.json
 /config.php
-/cookies/*
-!/cookies/.gitkeep
-!/cookies/.htaccess
 /vendor
 /composer.lock
 /storage/*

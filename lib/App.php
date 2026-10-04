@@ -20,12 +20,6 @@ final class App
         }
         $env = getenv('HPANEL_CONFIG');
         $config = Config::load(self::root(), is_string($env) && $env !== '' ? $env : null);
-        if (is_dir(self::root() . '/cookies')) {
-            // Legado (v1): sessões em texto puro e caches; apaga uma vez.
-            foreach (glob(self::root() . '/cookies/*.json') ?: [] as $legacy) {
-                @unlink($legacy);
-            }
-        }
         $store = new SessionStore($config->storageDir . '/sessions', $config->appSecret);
         $rateLimit = new RateLimit($config->storageDir . '/ratelimit', $config->appSecret);
         if (random_int(1, 100) === 1) {

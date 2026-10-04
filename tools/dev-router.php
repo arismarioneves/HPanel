@@ -8,7 +8,7 @@ declare(strict_types=1);
 $root = dirname(__DIR__);
 $path = rawurldecode((string) parse_url((string) $_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
-if (!str_starts_with($path, '/.well-known/') && preg_match('#(^|/)\.|^/(storage|lib|partials|tests|tools|vendor|docs|cookies)(/|$)|^/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$#', $path) === 1) {
+if (!str_starts_with($path, '/.well-known/') && preg_match('#(^|/)\.|^/(storage|lib|partials|tests|tools|vendor|docs)(/|$)|^/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$#', $path) === 1) {
     http_response_code(403);
     exit('Forbidden');
 }
