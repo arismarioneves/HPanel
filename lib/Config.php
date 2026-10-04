@@ -38,7 +38,7 @@ final class Config
                 );
             }
             if (function_exists('opcache_invalidate')) {
-                opcache_invalidate($file, true);
+                @opcache_invalidate($file, true); // restrict_api em hospedagem compartilhada emite warning
             }
         }
 
