@@ -1,38 +1,14 @@
 <?php
 
-/**
- * Get phpMyAdmin link for a database
- * Returns JSON with the direct URL to phpMyAdmin
- */
+declare(strict_types=1);
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Headers: X-Session-Hash, Content-Type');
+require __DIR__ . '/../lib/autoload.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
+use HPanel\{Context, Http, Request, Validate};
 
-require_once __DIR__ . '/HostingerClient.php';
-
-// Get parameters
-$username = $_GET['username'] ?? '';
-$dbName = $_GET['dbName'] ?? '';
-$domain = $_GET['domain'] ?? '';
-$orderId = (int)($_GET['orderId'] ?? 0);
-
-if (!$username || !$dbName || !$domain || !$orderId) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Missing parameters', 'success' => false]);
-    exit;
-}
-
-$client = new HostingerClient();
-$link = $client->getPhpMyAdminLink($username, $dbName, $domain, $orderId);
-
-if ($link) {
-    echo json_encode(['success' => true, 'link' => $link]);
-} else {
-    http_response_code(500);
-    echo json_encode(['error' => 'Failed to get phpMyAdmin link', 'success' => false]);
-}
+Http::handle(['GET'], static function (Request $req, Context $ctx): array {
+    $orderId = Validate::orderId($req->get('orderId'));
+    $site = $ctx->catalog->resolve($orderId, $req->get('domain'));
+    $db = Validate::dbName($req->get('db'));
+    return ['link' => $ctx->source()->phpMyAdminLink($site['username'], $db, $site['domain'], $orderId)];
+});

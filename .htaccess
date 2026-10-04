@@ -1,5 +1,16 @@
-RewriteEngine On
+Options -Indexes
 
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.+)$ $1.php [L,QSA]
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Nada fora da interface pública é servido pela web
+    RewriteRule ^\.well-known/ - [L]
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^(storage|lib|partials|tests|tools|vendor|docs)(/|$) - [F,L]
+    RewriteRule ^(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ - [F,L]
+
+    # URLs sem .php
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.+)$ $1.php [L,QSA]
+</IfModule>

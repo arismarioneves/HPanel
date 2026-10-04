@@ -1,0 +1,109 @@
+<?php
+
+declare(strict_types=1);
+
+namespace HPanel\Tests;
+
+use HPanel\ApiError;
+use HPanel\Config;
+use HPanel\Context;
+use HPanel\DemoSource;
+use HPanel\RateLimit;
+use HPanel\Session;
+use HPanel\SessionStore;
+use HPanel\Tests\Support\FakeTransport;
+use PHPUnit\Framework\TestCase;
+
+final class DemoSourceTest extends TestCase
+{
+    private string $dir;
+
+    protected function setUp(): void
+    {
+        $this->dir = sys_get_temp_dir() . '/hpanel-demo-' . bin2hex(random_bytes(4));
+    }
+
+    protected function tearDown(): void
+    {
+        array_map('unlink', glob($this->dir . '/*/*') ?: []);
+        array_map('rmdir', glob($this->dir . '/*') ?: []);
+        @rmdir($this->dir);
+    }
+
+    public function testFourFictitiousServersWithExampleDomainsOnly(): void
+    {
+        $servers = (new DemoSource())->servers();
+        self::assertCount(4, $servers);
+        self::assertSame([900001, 900002, 900003, 900004], array_column($servers, 'orderId'));
+        foreach ($servers as $server) {
+            self::assertNotEmpty($server['websites']);
+            self::assertStringEndsWith('.example', $server['server']['hostname']);
+            foreach ($server['websites'] as $site) {
+                self::assertStringEndsWith('.example', $site['domain']);
+            }
+        }
+    }
+
+    public function testReadsReturnFixturesPerServer(): void
+    {
+        $demo = new DemoSource();
+        $account = $demo->account('u900001', 'aurora.example', 900001);
+        $disk = $account['usage']['storage'];
+        self::assertGreaterThanOrEqual(0.9, $disk['value'] / $disk['limit'], 'servidor 1 com disco em nível crítico');
+        self::assertStringStartsWith('203.0.113.', $account['ip']);
+        self::assertNotEmpty($demo->databases('u900001', 'aurora.example', 900001));
+        self::assertSame('8.2', $demo->phpVersion('u900001', 'aurora.example', 900001)['current']);
+        self::assertStringStartsWith('ssh-rsa ', (string) $demo->gitKey('u900001', 'aurora.example', 900001));
+    }
+
+    public function testUnknownServerIsNotFound(): void
+    {
+        $this->expectExceptionObject(ApiError::notFound('Servidor não encontrado nesta conta.'));
+        (new DemoSource())->account('x', 'x.example', 123);
+    }
+
+    /** @return iterable<string, array{\Closure(DemoSource): mixed}> */
+    public static function blocked(): iterable
+    {
+        yield 'phpMyAdmin' => [static fn(DemoSource $d) => $d->phpMyAdminLink('u900001', 'u900001_wp', 'aurora.example', 900001)];
+        yield 'file browser' => [static fn(DemoSource $d) => $d->fileBrowserLink('u900001', 'aurora.example', 900001)];
+        yield 'set PHP' => [static fn(DemoSource $d) => $d->setPhpVersion('u900001', 'aurora.example', 900001, '8.3')];
+        yield 'create key' => [static fn(DemoSource $d) => $d->createGitKey('u900001', 'aurora.example', 900001)];
+        yield 'delete key' => [static fn(DemoSource $d) => $d->deleteGitKey('u900001', 'aurora.example', 900001)];
+    }
+
+    /** @dataProvider blocked */
+    public function testLinksAndMutationsAreForbidden(\Closure $call): void
+    {
+        $this->expectExceptionObject(ApiError::forbidden('Indisponível no modo demonstração.'));
+        $call(new DemoSource());
+    }
+
+    public function testDemoSessionUsesDemoSourceWithoutNetwork(): void
+    {
+        [$ctx, $http] = $this->demoContext();
+        self::assertInstanceOf(DemoSource::class, $ctx->source());
+        self::assertSame(['orderId' => 900002, 'domain' => 'pet-feliz.example', 'username' => 'u900002'], $ctx->catalog->site(900002, 'pet-feliz.example'));
+        self::assertSame(102400, $ctx->catalog->account(900002)['value']['usage']['storage']['limit']);
+        self::assertSame([], $http->calls);
+    }
+
+    public function testFreshTokenIsForbiddenInDemo(): void
+    {
+        [$ctx] = $this->demoContext();
+        $this->expectExceptionObject(ApiError::forbidden('Indisponível no modo demonstração.'));
+        $ctx->freshToken();
+    }
+
+    /** @return array{0: Context, 1: FakeTransport} */
+    private function demoContext(): array
+    {
+        $secret = random_bytes(32);
+        $store = new SessionStore($this->dir . '/sessions', $secret);
+        $session = new Session($store, null, '/', false, static function (): void {}, static fn() => 1000);
+        $session->start(['demo' => true]);
+        $http = new FakeTransport([]);
+        $ctx = new Context(Config::fromArray(['app_secret' => bin2hex($secret)], $this->dir), $session, $http, new RateLimit($this->dir . '/rl', $secret), static fn() => 1000);
+        return [$ctx, $http];
+    }
+}

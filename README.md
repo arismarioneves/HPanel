@@ -1,63 +1,61 @@
-# 🚀 Hostinger Dashboard
+![HPanel](.github/banner.png)
 
-Dashboard personalizado para gerenciar múltiplos websites hospedados na Hostinger de forma centralizada.
+# HPanel
 
-![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
+Painel para gerenciar todos os seus sites da Hostinger em um só lugar, sem navegar pelo hPanel a cada operação.
+
+![PHP](https://img.shields.io/badge/PHP-8.1+-777BB4?logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-## 📋 Visão Geral
+**Ver demonstração:** rode o painel localmente (veja [Instalação](#-instalação)) e clique em **Ver demonstração** na página inicial — tudo funciona com dados fictícios, sem conta na Hostinger.
 
-O Hostinger Dashboard oferece uma interface simplificada para gerenciar todos os seus websites em um só lugar, sem precisar navegar pelo hPanel da Hostinger para cada operação.
+![Dashboard](assets/img/dashboard-preview.webp)
 
 ### ✨ Funcionalidades
 
-- **📊 Visão geral de servidores** - Lista todos os planos de hospedagem com estatísticas de uso
-- **🔎 Busca global** - Encontra um site em todos os servidores a partir da página inicial
-- **🌐 Gerenciamento de websites** - Visualize todos os domínios, subdomínios e addons
-- **📁 Acesso rápido ao Gerenciador de Arquivos** - Link direto para cada domínio
-- **🗄️ Bancos de dados** - Lista bancos de dados com acesso ao phpMyAdmin
+- **📊 Visão geral de servidores** - Todos os planos de hospedagem com estatísticas de uso
+- **⚠️ Atenção** - Destaca servidores com disco ou inodes ≥ 80 % (≥ 90 % em vermelho)
+- **⭐ Favoritos** - Fixe os sites que você mais usa no topo do dashboard
+- **🔎 Busca Ctrl+K** - Paleta de busca rápida por sites e servidores em toda a conta
+- **🌐 Websites** - Domínios, subdomínios e addons de cada servidor
+- **📁 Gerenciador de Arquivos** - Link direto para cada domínio
+- **🗄️ Bancos de dados** - Lista bancos com acesso ao phpMyAdmin
 - **🐘 Versão PHP** - Altere a versão PHP de qualquer domínio
 - **🔑 Chave SSH (Git)** - Veja, crie ou recrie a chave SSH de deploy de cada servidor
-- **📈 Estatísticas de uso** - Disco, inodes, RAM, CPU (com cache de 1h para reduzir chamadas)
-- **🔄 Renovação do token** - Renove o JWT em 1 clique; o token também é renovado automaticamente durante a navegação (sessão deslizante, sem cron)
+- **📈 Uso** - Disco, inodes, RAM, CPU; respostas em cache na aba (exibe na hora e atualiza em segundo plano)
+- **⏱️ Sessão** - Indicador no cabeçalho com a validade do token; renovação automática e em 1 clique
+- **🌓 Tema** - Claro, escuro ou seguir o sistema (em Configurações)
+
+---
+
+## 🧪 Modo demonstração
+
+O botão **Ver demonstração** na página inicial abre o painel completo com dados fictícios (`lib/demo/fixtures.json`, domínios `.example`). Nenhuma chamada é feita à Hostinger e ações que alteram algo (versão PHP, chave SSH) ficam indisponíveis. Para sair, use **Conectar sua conta** ou **Sair do demo**.
+
+## ⌨️ Busca Ctrl+K
+
+`Ctrl+K` (ou `⌘K`, ou `/` fora de campos de texto) abre a paleta de busca. Use `↑`/`↓` para navegar, `Enter` para abrir e `Esc` para fechar. Em um site, `Tab` mostra as ações rápidas — **Visitar**, **hPanel**, **Arquivos**, **Servidor** — escolhidas com `←`/`→`. Os itens abertos recentemente e os favoritos ficam salvos no navegador (só aparecem os da conta carregada); **Limpar favoritos e recentes** fica em Configurações.
+
+## ⭐ Favoritos
+
+Clique na estrela de um site para fixá-lo na seção **Favoritos** do dashboard. A lista fica no `localStorage` do navegador (nada vai para o servidor).
+
+## ⚠️ Atenção
+
+A seção **Atenção** no dashboard lista os servidores com disco ou inodes a partir de 80 % de uso (aviso) e 90 % (crítico), os mais graves primeiro, com link para o servidor.
 
 ---
 
 ## 🔐 Autenticação
 
-O dashboard utiliza o **token JWT** do hPanel da Hostinger para autenticação. O token é armazenado de forma segura no servidor em arquivos de sessão.
+O dashboard usa o **token JWT** da sua própria sessão no hPanel. Você cola o token na página **Conectar** e ele passa a ficar só no servidor — o navegador nunca mais o vê.
 
-### Como funciona
+- O token é **cifrado com AES-256-GCM** e gravado em `storage/sessions/`.
+- A chave de cifragem é derivada do cookie `hp_sid` (HttpOnly) do seu navegador: **sem o seu navegador, o arquivo é ilegível**, mesmo para quem tiver acesso à pasta.
+- **Sair** apaga o token do servidor de verdade (não apenas do navegador).
+- Sessões paradas por **7 dias** são removidas automaticamente.
 
-```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Seu Navegador │  >  │  hPanel Hostinger│  >  │    Dashboard    │
-│   (Logado)      │     │  (Token JWT)     │     │  (Servidor)     │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-```
-
-### Formato de Sessão
-
-As sessões são armazenadas em arquivos JSON na pasta `cookies/`:
-
-```json
-{
-    "token": "eyJ0eXAiOiJKV1Qi...",
-    "gaid": "GA1.1.000000000.0000000000",
-    "update": "2026-01-07 15:00:00"
-}
-```
-
-### Sobre o Token JWT
-
-| Campo | Descrição |
-|-------|-----------|
-| `token` | Token JWT de autenticação (~1h de validade) |
-| `gaid` | ID do Google Analytics (opcional) |
-| `update` | Data/hora da última atualização |
-
-> ⚠️ O token JWT expira a cada **~1 hora**, mas é **renovado automaticamente durante a
-> navegação** (veja abaixo). Só é preciso colá-lo de novo se ele expirar de vez.
+> ⚠️ O token JWT expira a cada **~1 hora**, mas é **renovado automaticamente pelo servidor** (veja abaixo). Só é preciso colá-lo de novo se ele expirar de vez.
 
 ---
 
@@ -65,36 +63,55 @@ As sessões são armazenadas em arquivos JSON na pasta `cookies/`:
 
 ### Requisitos
 
-- PHP 8.0 ou superior
-- Extensão cURL habilitada
-- Servidor web (Apache, Nginx, XAMPP, etc.)
+- PHP 8.1 ou superior, com as extensões `curl` e `openssl`
+- Certificados de CA configurados no PHP (`curl.cainfo` no `php.ini`, apontando para um `cacert.pem`). Sem isso a conexão com a Hostinger falha com "A Hostinger não respondeu" e o log mostra `unable to get local issuer certificate`.
+- Servidor web (Apache, Nginx, Laragon, XAMPP, etc.)
 
 ### Passos
 
-1. **Clone ou copie os arquivos** para seu servidor local:
+1. **Clone os arquivos** no servidor:
 ```bash
 git clone https://github.com/arismarioneves/HPanel.git
 cd HPanel
 ```
 
-2. **Configure o caminho base** (apenas se o painel não estiver na raiz do domínio):
+2. **Configuração**: o `config.php` é criado sozinho no primeiro acesso (a pasta precisa de permissão de escrita). Se preferir, crie manualmente:
 ```bash
 cp config.exemplo.php config.php
-# edite 'base' => '/hpanel/' para a subpasta onde o painel está instalado
 ```
-O `config.php` é local e não é versionado. Sem ele, a aplicação assume a raiz do domínio (`/`).
+   - Ajuste `base` (ex.: `'/hpanel/'`) se o painel estiver em uma subpasta.
+   - Recomendado: aponte `storage_dir` para uma pasta **fora** da pasta pública.
 
-3. **Crie a pasta de cookies** (se não existir):
+3. **Abra o painel** no navegador e clique em **Conectar** (ou **Ver demonstração**).
+
+### Nginx
+
+No Apache o `.htaccess` já bloqueia tudo que não é público. No Nginx, use o bloco equivalente (instalação na **raiz** do domínio, `base => '/'`):
+
+```nginx
+location ~ ^/(storage|lib|partials|tests|tools|vendor|docs)(/|$) { deny all; }
+location ~ ^/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ { deny all; }
+location ~ /\. { deny all; }
+location / { try_files $uri $uri/ $uri.php?$query_string; }
+```
+
+Em **subpasta**, prefixe as regras com o mesmo caminho de `base`. Exemplo para `'base' => '/hpanel/'`:
+
+```nginx
+location ~ ^/hpanel/(storage|lib|partials|tests|tools|vendor|docs)(/|$) { deny all; }
+location ~ ^/hpanel/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ { deny all; }
+location ~ /\. { deny all; }
+location /hpanel/ { try_files $uri $uri/ $uri.php?$query_string; }
+```
+
+### Desenvolvimento
+
 ```bash
-mkdir cookies
+composer install
+vendor/bin/phpunit
+node --test tests/js/        # requer Node 18+
+php -S 127.0.0.1:8099 tools/dev-router.php
 ```
-
-4. **Acesse o dashboard** no navegador:
-```
-http://localhost/HPanel/
-```
-
-5. **Configure o token JWT** na página de Configurações.
 
 ---
 
@@ -103,14 +120,10 @@ http://localhost/HPanel/
 ### Passo a passo
 
 1. Acesse [hpanel.hostinger.com](https://hpanel.hostinger.com) e faça login
-
 2. Abra o DevTools (`F12`)
-
 3. Vá para **Application** → **Cookies** → **hpanel.hostinger.com**
-
 4. Encontre o cookie chamado `jwt` e copie seu valor
-
-5. Cole na página de Configurações do Dashboard e salve
+5. Cole na página **Conectar** do painel (botão **Conectar** na página inicial) e salve
 
 ### Dica
 
@@ -136,26 +149,13 @@ Na página de cada servidor há a seção **Chave SSH (Git)**, que gerencia a ch
 
 ## 🔄 Renovação do Token
 
-O JWT do hPanel usa **sessão deslizante**: enquanto ainda não expirou de vez, o endpoint
-`/auth/refresh` devolve um token novo válido por mais ~1h — usando apenas o próprio JWT
-(nenhum cookie extra é necessário).
+O JWT do hPanel usa **sessão deslizante**: enquanto ainda não expirou de vez, o endpoint `/auth/refresh` devolve um token novo válido por mais ~1h, usando apenas o próprio JWT.
 
-### Renovação automática na navegação
+- **Automática**: em qualquer chamada à API do dashboard, se faltam **≤ 15 min** para o token expirar, o **servidor** o renova antes de responder — sem cron e sem nada rodando no navegador.
+- **Renovar agora**: botão na página de Configurações, útil depois de muito tempo sem usar.
+- **Sair**: também em Configurações; apaga o token do servidor.
 
-Ao entrar em qualquer página, o dashboard verifica a sessão e, se o token estiver
-expirado ou perto de expirar (≤ 15 min), **renova em segundo plano, sem qualquer aviso**.
-Há um *throttle* de alguns minutos entre verificações para não checar a cada clique.
-Assim, enquanto você usa o painel, o token se mantém sozinho — sem cron, sem copiar de novo.
-
-### Renovar / sair (página de Configurações)
-
-Os controles ficam **apenas na página de Configurações**:
-
-- **Renovar agora** - renova o token na hora (útil se você ficou tempo sem navegar).
-- **Limpar Sessão** - encerra a sessão (logout), removendo o token do servidor.
-
-> ⚠️ Se o token ficar sem renovar por muito tempo e **expirar de vez**, o refresh falha e
-> é preciso **colar o JWT novamente** na página de Configurações.
+> ⚠️ Se o token **expirar de vez**, o refresh falha e é preciso **colar o JWT novamente** na página Conectar.
 
 ---
 
@@ -163,49 +163,53 @@ Os controles ficam **apenas na página de Configurações**:
 
 ```
 HPanel/
-├── index.php           # Página principal (lista servidores + busca global)
-├── server.php          # Detalhes do servidor, websites e chave SSH
-├── settings.php        # Configurações (token JWT + renovação)
-├── bootstrap.php       # Resolve o caminho base (APP_BASE) via config.php
-├── config.exemplo.php  # Modelo de configuração local (copiar para config.php)
-├── cookies/            # Arquivos de sessão e cache (JSON)
-│   └── .htaccess       # Bloqueia acesso web aos arquivos de sessão
+├── index.php            # Landing (sem sessão) ou dashboard: Atenção, Favoritos, servidores
+├── connect.php          # Conectar: colar o token JWT
+├── server.php           # Servidor em abas (sites, bancos, uso, chave SSH)
+├── settings.php         # Configurações (sessão, renovar, sair, tema)
+├── config.exemplo.php   # Modelo de configuração local
+├── .htaccess            # Bloqueia tudo que não é público
+├── lib/                 # Núcleo: sessão cifrada, HTTP, cliente Hostinger, validação
+│   ├── DemoSource.php   # Fonte de dados do modo demonstração
+│   └── demo/
+│       └── fixtures.json  # Dados fictícios do demo
+├── api/                 # Endpoints JSON (envelope único, CSRF, sem CORS)
+│   └── demo.php         # Entra no modo demonstração
+├── partials/            # Layout, cabeçalho e páginas renderizadas no servidor
 ├── assets/
-│   ├── style.css        # Estilos do dashboard
-│   ├── config.js        # Gerenciamento de sessão
-│   ├── ui.js            # Diálogos compartilhados (UI.alert / UI.confirm)
-│   └── token-status.js  # Auto-renovação silenciosa do token na navegação
-└── api/
-    ├── config.php          # Funções de configuração/sessão
-    ├── save-config.php     # Salvar token
-    ├── jwt-status.php      # Status do token (expiração)
-    ├── renew-token.php     # Renovar o token da sessão
-    ├── HostingerClient.php # Cliente da API Hostinger
-    ├── websites.php        # Endpoint: listar servidores
-    ├── server.php          # Endpoint: detalhes do servidor
-    ├── server-usage.php    # Endpoint: uso do servidor (com cache)
-    ├── usage-cache.php     # Cache de uso (1h)
-    ├── sites-cache.php     # Cache de sites para a busca global (1h)
-    ├── databases.php       # Endpoint: listar bancos
-    ├── phpmyadmin.php      # Endpoint: link phpMyAdmin
-    ├── file-browser.php    # Endpoint: link gerenciador de arquivos
-    ├── php-version.php     # Endpoint: versão PHP
-    ├── set-php-version.php # Endpoint: alterar versão PHP
-    └── ssh-key.php         # Endpoint: chave SSH Git (ver/criar/remover)
+│   ├── css/             # Estilos (tema claro/escuro)
+│   ├── js/              # Módulos ES (sem scripts inline)
+│   │   ├── palette.js   # Busca Ctrl+K (+ fuzzy.js)
+│   │   ├── favorites.js # Favoritos (localStorage)
+│   │   ├── attention.js # Seção Atenção
+│   │   ├── swr.js       # Cache stale-while-revalidate (sessionStorage)
+│   │   ├── session-pill.js / session-status.js  # Validade do token
+│   │   ├── jwt.js       # Leitura/validação do token colado
+│   │   └── demo.js      # Botão "Ver demonstração"
+│   ├── img/             # Imagens (preview do dashboard)
+│   ├── fonts/           # Fonte Inter local
+│   └── icons.svg        # Sprite de ícones
+├── .github/banner.png   # Banner do README
+├── storage/             # Sessões cifradas e rate limit (fora da web)
+├── tools/               # dev-router.php para o servidor embutido do PHP
+└── tests/               # PHPUnit + testes JS (node --test)
 ```
 
 ---
 
 ## 🛡️ Segurança
 
-- Token e sessão são armazenados no servidor (pasta `cookies/`)
-- A pasta `cookies/` tem um `.htaccess` que bloqueia acesso web aos arquivos de sessão
-- Hash único identifica cada sessão (salvo no localStorage do navegador)
-- Dados não são enviados para nenhum servidor externo
-- A renovação do token acontece no próprio navegador durante a navegação (sem cron/serviço externo)
-- Recomenda-se usar em ambiente local ou protegido
+- Cookie de sessão `hp_sid` **HttpOnly** e **SameSite=Strict**
+- Token **cifrado** (AES-256-GCM) no servidor, com chave derivada do cookie
+- **CSRF**: checagem de origem + header obrigatório nas chamadas à API
+- **CSP restrita**, sem scripts ou estilos inline; fonte servida localmente
+- **Sem CORS**: a API só atende o próprio painel
+- **Rate limit** na conexão (colar token)
+- Checagem de **posse** do servidor/site antes de qualquer operação
+- **GC de sessões**: sessões paradas por 7 dias são apagadas; "Sair" remove o token
+- `storage/`, `lib/`, `config.php` e afins bloqueados na web (`.htaccess` / Nginx)
+- Nenhum dado é enviado para serviços externos além da própria Hostinger
 
----
 
 ## 📝 Notas Técnicas
 

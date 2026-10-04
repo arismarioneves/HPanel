@@ -1,0 +1,594 @@
+{
+  "servers": [
+    {
+      "orderId": 900001,
+      "title": "Agência Aurora - Business - Servidor 1",
+      "planDisplayableName": "Business",
+      "planName": "hostinger_business",
+      "datacenter": {
+        "title": "South America (Brazil)"
+      },
+      "server": {
+        "hostname": "br-sp-web101.example"
+      },
+      "websites": [
+        {
+          "domain": "aurora.example",
+          "username": "u900001",
+          "vhostType": "main",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2023-01-01T10:20:00Z",
+          "updatedAt": "2026-01-01T00:10:00Z"
+        },
+        {
+          "domain": "loja.aurora.example",
+          "username": "u900001",
+          "vhostType": "subdomain",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2024-04-08T11:21:00Z",
+          "updatedAt": "2026-02-06T01:11:00Z"
+        },
+        {
+          "domain": "blog.aurora.example",
+          "username": "u900001",
+          "vhostType": "subdomain",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2023-07-15T12:22:00Z",
+          "updatedAt": "2026-03-11T02:12:00Z"
+        },
+        {
+          "domain": "cafe-do-porto.example",
+          "username": "u900001",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2024-10-22T13:23:00Z",
+          "updatedAt": "2026-04-16T03:13:00Z"
+        },
+        {
+          "domain": "clinica-sorriso.example",
+          "username": "u900001",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2023-01-02T14:24:00Z",
+          "updatedAt": "2026-05-21T04:14:00Z"
+        },
+        {
+          "domain": "staging.cafe-do-porto.example",
+          "username": "u900001",
+          "vhostType": "subdomain",
+          "type": "wordpress",
+          "status": "disabled",
+          "createdAt": "2024-04-09T15:25:00Z",
+          "updatedAt": "2026-06-26T05:15:00Z"
+        },
+        {
+          "domain": "advocacia-lima.example",
+          "username": "u900001",
+          "vhostType": "addon",
+          "type": "other",
+          "status": "enabled",
+          "createdAt": "2023-07-16T16:20:00Z",
+          "updatedAt": "2026-07-04T06:10:00Z"
+        },
+        {
+          "domain": "eventos-sul.example",
+          "username": "u900001",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2024-10-23T17:21:00Z",
+          "updatedAt": "2026-08-09T07:11:00Z"
+        },
+        {
+          "domain": "landing.aurora.example",
+          "username": "u900001",
+          "vhostType": "subdomain",
+          "type": "other",
+          "status": "enabled",
+          "createdAt": "2023-01-03T18:22:00Z",
+          "updatedAt": "2026-09-14T08:12:00Z"
+        },
+        {
+          "domain": "padaria-trigo.example",
+          "username": "u900001",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "disabled",
+          "createdAt": "2024-04-10T19:23:00Z",
+          "updatedAt": "2026-01-19T09:13:00Z"
+        }
+      ]
+    },
+    {
+      "orderId": 900002,
+      "title": "Agência Aurora - Premium - Servidor 2",
+      "planDisplayableName": "Premium",
+      "planName": "hostinger_premium",
+      "datacenter": {
+        "title": "South America (Brazil)"
+      },
+      "server": {
+        "hostname": "br-sp-web204.example"
+      },
+      "websites": [
+        {
+          "domain": "estudio-norte.example",
+          "username": "u900002",
+          "vhostType": "main",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2023-01-01T10:20:00Z",
+          "updatedAt": "2026-01-01T00:10:00Z"
+        },
+        {
+          "domain": "portfolio.estudio-norte.example",
+          "username": "u900002",
+          "vhostType": "subdomain",
+          "type": "other",
+          "status": "enabled",
+          "createdAt": "2024-04-08T11:21:00Z",
+          "updatedAt": "2026-02-06T01:11:00Z"
+        },
+        {
+          "domain": "pet-feliz.example",
+          "username": "u900002",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2023-07-15T12:22:00Z",
+          "updatedAt": "2026-03-11T02:12:00Z"
+        },
+        {
+          "domain": "academia-forca.example",
+          "username": "u900002",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2024-10-22T13:23:00Z",
+          "updatedAt": "2026-04-16T03:13:00Z"
+        },
+        {
+          "domain": "imobiliaria-casa.example",
+          "username": "u900002",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2023-01-02T14:24:00Z",
+          "updatedAt": "2026-05-21T04:14:00Z"
+        },
+        {
+          "domain": "app.imobiliaria-casa.example",
+          "username": "u900002",
+          "vhostType": "subdomain",
+          "type": "other",
+          "status": "enabled",
+          "createdAt": "2024-04-09T15:25:00Z",
+          "updatedAt": "2026-06-26T05:15:00Z"
+        },
+        {
+          "domain": "floricultura-ipe.example",
+          "username": "u900002",
+          "vhostType": "addon",
+          "type": "other",
+          "status": "disabled",
+          "createdAt": "2023-07-16T16:20:00Z",
+          "updatedAt": "2026-07-04T06:10:00Z"
+        },
+        {
+          "domain": "escola-saber.example",
+          "username": "u900002",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2024-10-23T17:21:00Z",
+          "updatedAt": "2026-08-09T07:11:00Z"
+        }
+      ]
+    },
+    {
+      "orderId": 900003,
+      "title": "Agência Aurora - Cloud Startup - Servidor 3",
+      "planDisplayableName": "Cloud Startup",
+      "planName": "cloud_startup",
+      "datacenter": {
+        "title": "Europe (Lithuania)"
+      },
+      "server": {
+        "hostname": "eu-lt-cloud031.example"
+      },
+      "websites": [
+        {
+          "domain": "nordic-tech.example",
+          "username": "u900003",
+          "vhostType": "main",
+          "type": "other",
+          "status": "enabled",
+          "createdAt": "2023-01-01T10:20:00Z",
+          "updatedAt": "2026-01-01T00:10:00Z"
+        },
+        {
+          "domain": "docs.nordic-tech.example",
+          "username": "u900003",
+          "vhostType": "subdomain",
+          "type": "other",
+          "status": "enabled",
+          "createdAt": "2024-04-08T11:21:00Z",
+          "updatedAt": "2026-02-06T01:11:00Z"
+        },
+        {
+          "domain": "viagens-mundo.example",
+          "username": "u900003",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2023-07-15T12:22:00Z",
+          "updatedAt": "2026-03-11T02:12:00Z"
+        },
+        {
+          "domain": "restaurante-oliva.example",
+          "username": "u900003",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2024-10-22T13:23:00Z",
+          "updatedAt": "2026-04-16T03:13:00Z"
+        },
+        {
+          "domain": "api.nordic-tech.example",
+          "username": "u900003",
+          "vhostType": "subdomain",
+          "type": "other",
+          "status": "enabled",
+          "createdAt": "2023-01-02T14:24:00Z",
+          "updatedAt": "2026-05-21T04:14:00Z"
+        },
+        {
+          "domain": "moda-verao.example",
+          "username": "u900003",
+          "vhostType": "addon",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2024-04-09T15:25:00Z",
+          "updatedAt": "2026-06-26T05:15:00Z"
+        },
+        {
+          "domain": "teste.moda-verao.example",
+          "username": "u900003",
+          "vhostType": "subdomain",
+          "type": "wordpress",
+          "status": "disabled",
+          "createdAt": "2023-07-16T16:20:00Z",
+          "updatedAt": "2026-07-04T06:10:00Z"
+        }
+      ]
+    },
+    {
+      "orderId": 900004,
+      "title": "Agência Aurora - Single - Servidor 4",
+      "planDisplayableName": "Single",
+      "planName": "hostinger_single",
+      "datacenter": {
+        "title": "Europe (Lithuania)"
+      },
+      "server": {
+        "hostname": "eu-lt-web058.example"
+      },
+      "websites": [
+        {
+          "domain": "consultoria-ramos.example",
+          "username": "u900004",
+          "vhostType": "main",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2023-01-01T10:20:00Z",
+          "updatedAt": "2026-01-01T00:10:00Z"
+        },
+        {
+          "domain": "blog.consultoria-ramos.example",
+          "username": "u900004",
+          "vhostType": "subdomain",
+          "type": "wordpress",
+          "status": "enabled",
+          "createdAt": "2024-04-08T11:21:00Z",
+          "updatedAt": "2026-02-06T01:11:00Z"
+        },
+        {
+          "domain": "eventos.consultoria-ramos.example",
+          "username": "u900004",
+          "vhostType": "subdomain",
+          "type": "other",
+          "status": "disabled",
+          "createdAt": "2023-07-15T12:22:00Z",
+          "updatedAt": "2026-03-11T02:12:00Z"
+        },
+        {
+          "domain": "newsletter.consultoria-ramos.example",
+          "username": "u900004",
+          "vhostType": "subdomain",
+          "type": "other",
+          "status": "enabled",
+          "createdAt": "2024-10-22T13:23:00Z",
+          "updatedAt": "2026-04-16T03:13:00Z"
+        }
+      ]
+    }
+  ],
+  "accounts": {
+    "900001": {
+      "username": "u900001",
+      "ftp_user": "u900001.ftp",
+      "ip": "203.0.113.11",
+      "web_server": "LiteSpeed",
+      "database_version": "MariaDB 10.11",
+      "shell_enabled": true,
+      "backup_interval": 1,
+      "created_at": "2022-02-10T09:00:00Z",
+      "server": {
+        "hostname": "br-sp-web101.example",
+        "database": {
+          "hostname": "db-br-sp-web101.example",
+          "ip": "203.0.113.16"
+        }
+      },
+      "usage": {
+        "storage": {
+          "value": 97536,
+          "limit": 102400
+        },
+        "inodes": {
+          "value": 412000,
+          "limit": 600000
+        },
+        "databases": {
+          "value": 3,
+          "limit": 300
+        },
+        "subdomains": {
+          "value": 4,
+          "limit": 100
+        },
+        "ftp_accounts": {
+          "value": 4,
+          "limit": 100
+        }
+      },
+      "plan_limits": {
+        "cpu_cores": 3,
+        "ram": 4194304,
+        "entry_processes": 50,
+        "active_processes": 20,
+        "max_addons": 100
+      }
+    },
+    "900002": {
+      "username": "u900002",
+      "ftp_user": "u900002.ftp",
+      "ip": "203.0.113.24",
+      "web_server": "LiteSpeed",
+      "database_version": "MariaDB 10.11",
+      "shell_enabled": true,
+      "backup_interval": 1,
+      "created_at": "2023-03-11T09:00:00Z",
+      "server": {
+        "hostname": "br-sp-web204.example",
+        "database": {
+          "hostname": "db-br-sp-web204.example",
+          "ip": "203.0.113.29"
+        }
+      },
+      "usage": {
+        "storage": {
+          "value": 87040,
+          "limit": 102400
+        },
+        "inodes": {
+          "value": 342000,
+          "limit": 400000
+        },
+        "databases": {
+          "value": 2,
+          "limit": 100
+        },
+        "subdomains": {
+          "value": 2,
+          "limit": 100
+        },
+        "ftp_accounts": {
+          "value": 2,
+          "limit": 100
+        }
+      },
+      "plan_limits": {
+        "cpu_cores": 2,
+        "ram": 2097152,
+        "entry_processes": 40,
+        "active_processes": 20,
+        "max_addons": 100
+      }
+    },
+    "900003": {
+      "username": "u900003",
+      "ftp_user": "u900003.ftp",
+      "ip": "203.0.113.37",
+      "web_server": "LiteSpeed",
+      "database_version": "MariaDB 10.11",
+      "shell_enabled": true,
+      "backup_interval": 1,
+      "created_at": "2024-04-12T09:00:00Z",
+      "server": {
+        "hostname": "eu-lt-cloud031.example",
+        "database": {
+          "hostname": "db-eu-lt-cloud031.example",
+          "ip": "203.0.113.31"
+        }
+      },
+      "usage": {
+        "storage": {
+          "value": 61440,
+          "limit": 204800
+        },
+        "inodes": {
+          "value": 380000,
+          "limit": 2000000
+        },
+        "databases": {
+          "value": 4,
+          "limit": 300
+        },
+        "subdomains": {
+          "value": 3,
+          "limit": 300
+        },
+        "ftp_accounts": {
+          "value": 6,
+          "limit": 300
+        }
+      },
+      "plan_limits": {
+        "cpu_cores": 4,
+        "ram": 4194304,
+        "entry_processes": 100,
+        "active_processes": 30,
+        "max_addons": 300
+      }
+    },
+    "900004": {
+      "username": "u900004",
+      "ftp_user": "u900004.ftp",
+      "ip": "203.0.113.48",
+      "web_server": "Apache",
+      "database_version": "MariaDB 10.11",
+      "shell_enabled": false,
+      "backup_interval": 7,
+      "created_at": "2025-05-13T09:00:00Z",
+      "server": {
+        "hostname": "eu-lt-web058.example",
+        "database": {
+          "hostname": "db-eu-lt-web058.example",
+          "ip": "203.0.113.41"
+        }
+      },
+      "usage": {
+        "storage": {
+          "value": 9216,
+          "limit": 51200
+        },
+        "inodes": {
+          "value": 41000,
+          "limit": 200000
+        },
+        "databases": {
+          "value": 1,
+          "limit": 2
+        },
+        "subdomains": {
+          "value": 3,
+          "limit": 25
+        },
+        "ftp_accounts": {
+          "value": 1,
+          "limit": 5
+        }
+      },
+      "plan_limits": {
+        "cpu_cores": 1,
+        "ram": 1048576,
+        "entry_processes": 20,
+        "active_processes": 10,
+        "max_addons": 1
+      }
+    }
+  },
+  "databases": {
+    "900001": [
+      {
+        "name": "u900001_wp",
+        "user": "u900001_wpadm",
+        "diskUsageMb": 512.4
+      },
+      {
+        "name": "u900001_loja",
+        "user": "u900001_lojaadm",
+        "diskUsageMb": 128.0
+      },
+      {
+        "name": "u900001_blog",
+        "user": "u900001_blogadm",
+        "diskUsageMb": 64.7
+      }
+    ],
+    "900002": [
+      {
+        "name": "u900002_wp",
+        "user": "u900002_wpadm",
+        "diskUsageMb": 512.4
+      },
+      {
+        "name": "u900002_loja",
+        "user": "u900002_lojaadm",
+        "diskUsageMb": 128.0
+      }
+    ],
+    "900003": [
+      {
+        "name": "u900003_wp",
+        "user": "u900003_wpadm",
+        "diskUsageMb": 512.4
+      },
+      {
+        "name": "u900003_loja",
+        "user": "u900003_lojaadm",
+        "diskUsageMb": 128.0
+      },
+      {
+        "name": "u900003_blog",
+        "user": "u900003_blogadm",
+        "diskUsageMb": 64.7
+      },
+      {
+        "name": "u900003_app",
+        "user": "u900003_appadm",
+        "diskUsageMb": 12.3
+      }
+    ],
+    "900004": [
+      {
+        "name": "u900004_wp",
+        "user": "u900004_wpadm",
+        "diskUsageMb": 512.4
+      }
+    ]
+  },
+  "phpVersion": {
+    "current": "8.2",
+    "currentFull": "8.2.27",
+    "versions": [
+      {
+        "version": "7.4",
+        "label": "PHP 7.4"
+      },
+      {
+        "version": "8.0",
+        "label": "PHP 8.0"
+      },
+      {
+        "version": "8.1",
+        "label": "PHP 8.1"
+      },
+      {
+        "version": "8.2",
+        "label": "PHP 8.2"
+      },
+      {
+        "version": "8.3",
+        "label": "PHP 8.3"
+      }
+    ]
+  },
+  "gitKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDdemoChaveFicticiaHPanelSomenteParaDemonstracao0000000000000000000000000000demo hpanel-demo@aurora.example"
+}
