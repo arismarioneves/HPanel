@@ -590,5 +590,39 @@
       }
     ]
   },
-  "gitKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDdemoChaveFicticiaHPanelSomenteParaDemonstracao0000000000000000000000000000demo hpanel-demo@aurora.example"
+  "gitKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDdemoChaveFicticiaHPanelSomenteParaDemonstracao0000000000000000000000000000demo hpanel-demo@aurora.example",
+  "gitRepos": {
+    "aurora.example": [
+      {
+        "id": 611001,
+        "repoUrl": "git@github.com:acme-demo/site-aurora.git",
+        "branch": "main",
+        "installPath": "",
+        "webhookUrl": "https://webhooks.hostinger.com/deploy/0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+        "webhookProvider": "Github",
+        "webhookSetupUrl": "https://github.com/acme-demo/site-aurora/settings/hooks/new"
+      },
+      {
+        "id": 611002,
+        "repoUrl": "https://github.com/acme-demo/loja-aurora.git",
+        "branch": "producao",
+        "installPath": "loja",
+        "webhookUrl": "https://webhooks.hostinger.com/deploy/9a8b7c6d5e4f30211203f4e5d6c7b8a9",
+        "webhookProvider": "Github",
+        "webhookSetupUrl": "https://github.com/acme-demo/loja-aurora/settings/hooks/new"
+      }
+    ],
+    "cafe-do-porto.example": [
+      {
+        "id": 611003,
+        "repoUrl": "git@gitlab.com:acme-demo/cafe.git",
+        "branch": "main",
+        "installPath": "",
+        "webhookUrl": "https://webhooks.hostinger.com/deploy/1122334455667788990011223344556f",
+        "webhookProvider": "Gitlab",
+        "webhookSetupUrl": "https://gitlab.com/acme-demo/cafe/-/hooks"
+      }
+    ]
+  },
+  "gitOutput": "Deployment start\nRepository git@github.com:acme-demo/site-aurora.git\nChecking project directory is empty\nProject directory is git repository\nOn branch main\nYour branch is up to date with origin/main.\n\nnothing to commit, working tree clean\nLooking for composer.lock file\nDeployment finished"
 }

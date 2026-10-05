@@ -22,6 +22,7 @@ Painel para gerenciar todos os seus sites da Hostinger em um só lugar, sem nave
 - **🗄️ Bancos de dados** - Lista bancos com acesso ao phpMyAdmin
 - **🐘 Versão PHP** - Altere a versão PHP de qualquer domínio
 - **🔑 Chave SSH (Git)** - Veja, crie ou recrie a chave SSH de deploy de cada servidor
+- **🌿 Git e auto deploy** - Repositórios de cada domínio: criar, implantar na hora, ver a saída do último deploy, copiar o webhook e excluir
 - **📈 Uso** - Disco, inodes, RAM, CPU; respostas em cache na aba (exibe na hora e atualiza em segundo plano)
 - **⏱️ Sessão** - Indicador no cabeçalho com a validade do token; renovação automática e em 1 clique
 - **🌓 Tema** - Claro, escuro ou seguir o sistema (em Configurações)
@@ -35,6 +36,18 @@ O botão **Ver demonstração** na página inicial abre o painel completo com da
 ## ⌨️ Busca Ctrl+K
 
 `Ctrl+K` (ou `⌘K`, ou `/` fora de campos de texto) abre a paleta de busca. Use `↑`/`↓` para navegar, `Enter` para abrir e `Esc` para fechar. Em um site, `Tab` mostra as ações rápidas — **Visitar**, **hPanel**, **Arquivos**, **Servidor** — escolhidas com `←`/`→`. Os itens abertos recentemente e os favoritos ficam salvos no navegador (só aparecem os da conta carregada); **Limpar favoritos e recentes** fica em Configurações.
+
+## 🌿 Git e auto deploy
+
+O botão de Git na lista de sites abre o gerenciador de repositórios **do domínio**. Como na Hostinger o Git é configurado por vhost, os subdomínios são gerenciados pelo domínio pai — por isso o botão só aparece nas linhas de domínio.
+
+Dentro da modal dá para:
+
+- **Criar** um repositório (URL, branch e diretório; em branco = `public_html`). A pasta de destino precisa estar vazia, e repositórios privados exigem a chave SSH do servidor cadastrada no GitHub/GitLab (aba **Ferramentas**).
+- **Implantar** na hora (o mesmo `git pull` que o webhook dispara).
+- Ver a **saída do último deploy**.
+- **Copiar o webhook** de auto deploy — ele fica mascarado por padrão. Trate o token como senha: quem o tiver dispara um deploy nesse site.
+- **Excluir** o repositório (os arquivos já publicados permanecem no servidor).
 
 ## ⭐ Favoritos
 

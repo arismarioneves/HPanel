@@ -27,6 +27,16 @@ export const fact = (label, value) => h('div', {}, h('dt', {}, label), h('dd', {
 export const iconButton = (name, label, onClick) =>
   h('button', { type: 'button', class: 'btn btn-ghost btn-icon btn-sm', 'aria-label': label, 'data-tip': label, on: { click: onClick } }, icon(name));
 
+/** Copia para a área de transferência e avisa; alguns navegadores negam fora de gesto do usuário. */
+export async function copyText(text, message) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(message, 'ok');
+  } catch {
+    toast('Não deu para copiar automaticamente. Selecione o texto e copie.', 'warn');
+  }
+}
+
 /** Abre link gerado pela Hostinger (arquivos, phpMyAdmin) numa aba nova sem perder o gesto do usuário. */
 export async function openExternal(endpoint, params) {
   const win = window.open('about:blank', '_blank');
