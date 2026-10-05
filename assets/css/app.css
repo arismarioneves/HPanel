@@ -110,6 +110,9 @@ main.container { padding-block: var(--s5) var(--s7); }
 .btn-sm { height: 32px; padding: 0 var(--s3); font-size: .85rem; }
 .btn-sm.btn-icon { width: 32px; }
 .btn[aria-busy='true'] { pointer-events: none; opacity: .7; }
+.btn[aria-busy='true'] > .i { display: none; }
+.btn[aria-busy='true']::before { content: ''; width: 15px; height: 15px; flex: none; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ===== Formulários ===== */
 .label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: var(--s1); }
@@ -118,6 +121,8 @@ main.container { padding-block: var(--s5) var(--s7); }
 .input[aria-invalid='true'] { border-color: var(--danger); }
 textarea.input { resize: vertical; }
 .hint { color: var(--muted); font-size: .85rem; margin-top: var(--s1); }
+.hint-error { color: var(--danger); }
+.hint-error:empty { display: none; }
 .field-status { font-size: .85rem; margin-top: var(--s1); min-height: 1.3em; overflow-wrap: anywhere; }
 .field-status-ok { color: var(--ok); font-weight: 600; }
 .field-status-error { color: var(--danger); }
@@ -275,6 +280,19 @@ textarea.input { resize: vertical; }
 /* ===== Código ===== */
 .code { margin: 0; padding: var(--s3); border: 1px solid var(--border); border-radius: var(--r2); background: var(--surface-2); white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; }
 
+/* ===== Git ===== */
+.repo-list { display: grid; gap: var(--s3); }
+.repo { display: grid; gap: var(--s3); padding: var(--s3) var(--s4); border: 1px solid var(--border); border-radius: var(--r2); background: var(--surface-2); }
+.repo-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s2) var(--s3); align-items: center; }
+.repo-head .i { color: var(--accent); }
+.repo-head .badges { grid-column: 2; display: flex; gap: var(--s1); flex-wrap: wrap; }
+.repo-url { font-weight: 600; overflow-wrap: anywhere; }
+.repo-webhook-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s1) var(--s2); align-items: center; padding: var(--s2) var(--s3); border: 1px solid var(--border); border-radius: var(--r2); background: var(--surface); }
+.repo-webhook-row > span:first-child { grid-column: 1 / -1; }
+.repo-webhook { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.repo-output { display: grid; gap: var(--s2); }
+.repo-sep { border-top: 1px solid var(--border); }
+
 /* ===== Conectar ===== */
 .connect-layout { display: grid; gap: var(--s4); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 .guide { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); }
@@ -350,7 +368,7 @@ textarea.input { resize: vertical; }
 .modal-wide { width: min(640px, 100% - 2 * var(--s4)); }
 .modal::backdrop { background: rgb(10 8 20 / .55); backdrop-filter: blur(2px); }
 .modal-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); padding: var(--s4) var(--s5); border-bottom: 1px solid var(--border); }
-.modal-body { padding: var(--s5); display: grid; gap: var(--s3); }
+.modal-body { padding: var(--s5); display: grid; gap: var(--s3); max-height: calc(100dvh - 180px); overflow-y: auto; }
 .modal-foot { display: flex; justify-content: flex-end; gap: var(--s2); padding: var(--s3) var(--s5) var(--s4); }
 
 /* ===== Tooltip ===== */

@@ -52,6 +52,31 @@ final class DemoSource implements DataSource
         throw self::blocked();
     }
 
+    public function gitRepos(string $username, string $domain, int $orderId): array
+    {
+        return $this->fx['gitRepos'][$domain] ?? [];
+    }
+
+    public function createGitRepo(string $username, string $domain, int $orderId, string $repository, string $branch, string $directory): void
+    {
+        throw self::blocked();
+    }
+
+    public function deleteGitRepo(string $username, string $domain, int $orderId, int $repoId): void
+    {
+        throw self::blocked();
+    }
+
+    public function deployGitRepo(string $username, string $domain, int $orderId, int $repoId): void
+    {
+        throw self::blocked();
+    }
+
+    public function gitRepoOutput(string $username, string $domain, int $orderId, int $repoId): string
+    {
+        return $this->fx['gitOutput'];
+    }
+
     public function gitKey(string $username, string $domain, int $orderId): ?string
     {
         return $this->fx['gitKey'];

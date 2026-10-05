@@ -88,6 +88,71 @@ final class HostingerSourceTest extends TestCase
         self::assertSame(['7.4', '8.0', '8.1', '8.2', '8.3'], array_column($info['versions'], 'version'));
     }
 
+    public function testGitReposFlattensAutoDeployInfoAndTrimsInstallPath(): void
+    {
+        $http = new FakeTransport([self::ok(['data' => [
+            [
+                'id' => 702822,
+                'repoUrl' => 'git@github.com:acme/site.git',
+                'branch' => 'review',
+                'installPath' => '/',
+                'autoDeployInfo' => ['webhookUrl' => 'https://webhooks.hostinger.com/deploy/abc', 'webhookProvider' => 'Github', 'webhookSetupUrl' => 'https://github.com/acme/site/settings/hooks/new'],
+            ],
+            ['id' => 702823, 'repoUrl' => 'git@github.com:acme/app.git', 'branch' => 'main', 'installPath' => 'app'],
+        ]])]);
+        $repos = (new HostingerSource($http, 't', ''))->gitRepos('u123', 'loja.com', 42);
+
+        self::assertStringEndsWith('/vhosts/loja.com/git-repos?gaid=', $http->calls[0]['url']);
+        self::assertSame('', $repos[0]['installPath']);
+        self::assertSame('https://webhooks.hostinger.com/deploy/abc', $repos[0]['webhookUrl']);
+        self::assertSame('app', $repos[1]['installPath']);
+        self::assertNull($repos[1]['webhookUrl']);
+    }
+
+    public function testDeployUsesPutOnRepoId(): void
+    {
+        $http = new FakeTransport([['status' => 204, 'body' => '']]);
+        (new HostingerSource($http, 't', ''))->deployGitRepo('u123', 'loja.com', 42, 702822);
+
+        self::assertSame('PUT', $http->calls[0]['method']);
+        self::assertStringContainsString('/git-repos/702822/deploy', $http->calls[0]['url']);
+    }
+
+    public function testCreateGitRepoSurfacesTheRefusalFromHostinger(): void
+    {
+        $http = new FakeTransport([['status' => 422, 'body' => '{"message":"Install path directory is not empty"}']]);
+        try {
+            (new HostingerSource($http, 't', ''))->createGitRepo('u123', 'loja.com', 42, 'git@github.com:acme/site.git', 'main', 'app');
+            self::fail('esperava ApiError');
+        } catch (ApiError $e) {
+            self::assertSame('invalid_input', $e->errorCode);
+            self::assertSame('Install path directory is not empty', $e->getMessage());
+        }
+        self::assertSame('{"repository":"git@github.com:acme\/site.git","branch":"main","directory":"app"}', $http->calls[0]['body']);
+    }
+
+    public function testCreateGitRepoHidesLongOrMissingUpstreamMessages(): void
+    {
+        foreach ([['status' => 400, 'body' => '{"message":"' . str_repeat('x', 201) . '"}'], ['status' => 400, 'body' => '{"trace":"interno"}']] as $resp) {
+            try {
+                (new HostingerSource(new FakeTransport([$resp]), 't', ''))->createGitRepo('u', 'd.com', 1, 'git@h:a/b.git', 'main', '');
+                self::fail('esperava ApiError');
+            } catch (ApiError $e) {
+                self::assertStringStartsWith('A Hostinger recusou', $e->getMessage());
+            }
+        }
+    }
+
+    public function testGitRepoOutputReadsTheDeploymentLog(): void
+    {
+        $http = new FakeTransport([self::ok(['data' => ['output' => "Deployment start
+Deployment finished"]])]);
+        $out = (new HostingerSource($http, 't', ''))->gitRepoOutput('u123', 'loja.com', 42, 702822);
+
+        self::assertStringContainsString('Deployment finished', $out);
+        self::assertStringContainsString('/git-repos/702822/output', $http->calls[0]['url']);
+    }
+
     public function testCreateGitKeyWhenKeyAlreadyExistsReturnsCurrentKey(): void
     {
         $http = new FakeTransport([

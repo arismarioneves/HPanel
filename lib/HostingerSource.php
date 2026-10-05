@@ -79,6 +79,64 @@ final class HostingerSource implements DataSource
         $this->json('PATCH', self::phpPath($username, $domain), self::scope($username, $domain, $orderId), ['phpVersion' => $version]);
     }
 
+    public function gitRepos(string $username, string $domain, int $orderId): array
+    {
+        $data = $this->json('GET', self::gitPath($username, $domain), self::scope($username, $domain, $orderId))['data'] ?? [];
+        $repos = [];
+        foreach (is_array($data) ? $data : [] as $repo) {
+            if (!is_array($repo)) {
+                continue;
+            }
+            $auto = is_array($repo['autoDeployInfo'] ?? null) ? $repo['autoDeployInfo'] : [];
+            $repos[] = [
+                'id' => (int) ($repo['id'] ?? 0),
+                'repoUrl' => (string) ($repo['repoUrl'] ?? ''),
+                'branch' => (string) ($repo['branch'] ?? ''),
+                'installPath' => trim((string) ($repo['installPath'] ?? ''), '/'),
+                'webhookUrl' => self::str($auto['webhookUrl'] ?? null),
+                'webhookProvider' => self::str($auto['webhookProvider'] ?? null),
+                'webhookSetupUrl' => self::str($auto['webhookSetupUrl'] ?? null),
+            ];
+        }
+        return $repos;
+    }
+
+    public function createGitRepo(string $username, string $domain, int $orderId, string $repository, string $branch, string $directory): void
+    {
+        $r = $this->raw('POST', self::gitPath($username, $domain), self::scope($username, $domain, $orderId), [
+            'repository' => $repository,
+            'branch' => $branch,
+            'directory' => $directory,
+        ]);
+        if ($r['status'] >= 200 && $r['status'] < 300) {
+            return;
+        }
+        // 4xx aqui é recusa do próprio Git (repositório inacessível, pasta não vazia): a mensagem ajuda o usuário.
+        if ($r['status'] >= 400 && $r['status'] < 500 && $r['status'] !== 401) {
+            throw ApiError::invalid(self::reason($r['json']) ?? 'A Hostinger recusou esse repositório. Confira a URL, a branch e se a pasta de destino está vazia.');
+        }
+        $this->fail($r['status'], 'POST git-repos');
+    }
+
+    public function deleteGitRepo(string $username, string $domain, int $orderId, int $repoId): void
+    {
+        $this->json('DELETE', self::gitPath($username, $domain) . '/' . $repoId, self::scope($username, $domain, $orderId));
+    }
+
+    public function deployGitRepo(string $username, string $domain, int $orderId, int $repoId): void
+    {
+        $r = $this->raw('PUT', self::gitPath($username, $domain) . '/' . $repoId . '/deploy', self::scope($username, $domain, $orderId));
+        if ($r['status'] < 200 || $r['status'] >= 300) {
+            $this->fail($r['status'], 'PUT git-repos deploy');
+        }
+    }
+
+    public function gitRepoOutput(string $username, string $domain, int $orderId, int $repoId): string
+    {
+        $path = self::gitPath($username, $domain) . '/' . $repoId . '/output';
+        return (string) ($this->json('GET', $path, self::scope($username, $domain, $orderId))['data']['output'] ?? '');
+    }
+
     public function gitKey(string $username, string $domain, int $orderId): ?string
     {
         $key = $this->json('GET', self::accountPath($username) . '/git-key', self::scope($username, $domain, $orderId))['data']['publicKey'] ?? null;
@@ -151,6 +209,22 @@ final class HostingerSource implements DataSource
         throw ApiError::upstream();
     }
 
+    private static function str(mixed $v): ?string
+    {
+        return is_string($v) && $v !== '' ? $v : null;
+    }
+
+    /** Mensagem de recusa da Hostinger, saneada para exibição. */
+    private static function reason(?array $json): ?string
+    {
+        $msg = is_array($json) ? ($json['message'] ?? null) : null;
+        if (!is_string($msg)) {
+            return null;
+        }
+        $msg = trim(preg_replace('/\s+/u', ' ', $msg) ?? '');
+        return $msg !== '' && mb_strlen($msg) <= 200 ? $msg : null;
+    }
+
     private static function accountPath(string $username): string
     {
         return '/api/wh-api/api/hapi/v1/accounts/' . rawurlencode($username);
@@ -159,6 +233,11 @@ final class HostingerSource implements DataSource
     private static function phpPath(string $username, string $domain): string
     {
         return self::accountPath($username) . '/vhosts/' . rawurlencode($domain) . '/php/version';
+    }
+
+    private static function gitPath(string $username, string $domain): string
+    {
+        return self::accountPath($username) . '/vhosts/' . rawurlencode($domain) . '/git-repos';
     }
 
     /** @return list<string> */

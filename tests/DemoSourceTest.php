@@ -54,6 +54,9 @@ final class DemoSourceTest extends TestCase
         self::assertNotEmpty($demo->databases('u900001', 'aurora.example', 900001));
         self::assertSame('8.2', $demo->phpVersion('u900001', 'aurora.example', 900001)['current']);
         self::assertStringStartsWith('ssh-rsa ', (string) $demo->gitKey('u900001', 'aurora.example', 900001));
+        self::assertCount(2, $demo->gitRepos('u900001', 'aurora.example', 900001));
+        self::assertSame([], $demo->gitRepos('u900002', 'pet-feliz.example', 900002));
+        self::assertStringContainsString('Deployment', $demo->gitRepoOutput('u900001', 'aurora.example', 900001, 611001));
     }
 
     public function testUnknownServerIsNotFound(): void
@@ -70,6 +73,9 @@ final class DemoSourceTest extends TestCase
         yield 'set PHP' => [static fn(DemoSource $d) => $d->setPhpVersion('u900001', 'aurora.example', 900001, '8.3')];
         yield 'create key' => [static fn(DemoSource $d) => $d->createGitKey('u900001', 'aurora.example', 900001)];
         yield 'delete key' => [static fn(DemoSource $d) => $d->deleteGitKey('u900001', 'aurora.example', 900001)];
+        yield 'create repo' => [static fn(DemoSource $d) => $d->createGitRepo('u900001', 'aurora.example', 900001, 'git@github.com:a/b.git', 'main', '')];
+        yield 'delete repo' => [static fn(DemoSource $d) => $d->deleteGitRepo('u900001', 'aurora.example', 900001, 611001)];
+        yield 'deploy repo' => [static fn(DemoSource $d) => $d->deployGitRepo('u900001', 'aurora.example', 900001, 611001)];
     }
 
     /** @dataProvider blocked */

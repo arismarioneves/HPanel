@@ -36,6 +36,51 @@ final class Validate
         throw ApiError::invalid('Banco de dados inválido.');
     }
 
+    public static function repoId(mixed $v): int
+    {
+        if (is_int($v) && $v > 0) {
+            return $v;
+        }
+        if (is_string($v) && ctype_digit($v) && (int) $v > 0) {
+            return (int) $v;
+        }
+        throw ApiError::invalid('Repositório inválido.');
+    }
+
+    /** `https://host/user/repo.git` ou `git@host:user/repo.git` (o hPanel aceita os dois). */
+    public static function repoUrl(mixed $v): string
+    {
+        $u = is_string($v) ? trim($v) : '';
+        $ok = $u !== '' && strlen($u) <= 512
+            && preg_match('#^(https://[A-Za-z0-9.-]+(?::\d+)?/\S+|(?:ssh://)?[A-Za-z0-9._-]+@[A-Za-z0-9.-]+[:/]\S+)$#D', $u) === 1;
+        if ($ok) {
+            return $u;
+        }
+        throw ApiError::invalid('URL do repositório inválida. Use https://github.com/usuario/repo.git ou git@github.com:usuario/repo.git.');
+    }
+
+    public static function branch(mixed $v): string
+    {
+        $b = is_string($v) ? trim($v) : '';
+        if (preg_match('#^[A-Za-z0-9][A-Za-z0-9._/-]{0,254}$#D', $b) === 1 && !str_contains($b, '..')) {
+            return $b;
+        }
+        throw ApiError::invalid('Branch inválida.');
+    }
+
+    /** Pasta de destino relativa ao domínio; vazia = `public_html`. */
+    public static function directory(mixed $v): string
+    {
+        $d = trim(is_string($v) ? trim($v) : '', '/');
+        if ($d === '') {
+            return '';
+        }
+        if (preg_match('#^[A-Za-z0-9._/-]{1,255}$#D', $d) === 1 && !str_contains($d, '..')) {
+            return $d;
+        }
+        throw ApiError::invalid('Diretório inválido. Use um caminho relativo simples, como "app" ou "site/publico".');
+    }
+
     public static function phpVersion(mixed $v): string
     {
         if (is_string($v) && preg_match('/^\d{1,2}\.\d{1,2}$/D', $v) === 1) {

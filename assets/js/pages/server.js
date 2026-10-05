@@ -5,9 +5,10 @@ import { h, icon, $, clear, boot } from '../h.js';
 import { errorBlock, emptyBlock, skeletonLines } from '../states.js';
 import { toast } from '../toast.js';
 import { confirmDialog } from '../modal.js';
-import { meter, badge, section, fact, iconButton, openExternal } from '../components.js';
+import { meter, badge, section, fact, iconButton, openExternal, copyText } from '../components.js';
 import { formatDate, formatMb, relTime } from '../format.js';
 import { groupSites } from '../sites.js';
+import { openGitModal } from '../git.js';
 import * as favs from '../favorites.js';
 
 const { orderId } = boot();
@@ -86,21 +87,12 @@ function renderHead() {
   if (account?.ip) {
     meta.append(' · IP ', h('button', {
       type: 'button', class: 'btn btn-ghost btn-sm mono', 'data-tip': 'Copiar IP',
-      on: { click: () => copy(account.ip, 'IP copiado.') },
+      on: { click: () => copyText(account.ip, 'IP copiado.') },
     }, account.ip, icon('copy')));
   }
   clear($('#serverActions')).append(
     detail.cachedAt ? h('span', { class: 'muted small' }, `Dados ${relTime(detail.cachedAt)}`) : null,
     h('button', { type: 'button', class: 'btn btn-secondary btn-sm', on: { click: () => init(true) } }, icon('refresh'), 'Atualizar'));
-}
-
-async function copy(text, message) {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast(message, 'ok');
-  } catch {
-    toast('Não deu para copiar automaticamente. Selecione o texto e copie.', 'warn');
-  }
 }
 
 /* ===== Visão geral ===== */
@@ -176,7 +168,7 @@ function renderSites(p) {
   draw();
 }
 
-function siteRow(site, children = []) {
+function siteRow(site, children = [], isChild = false) {
   const dbs = h('div', { class: 'site-dbs', hidden: true });
   const dbButton = iconButton('database', 'Bancos de dados', () => toggleDbs(dbButton, dbs, site.domain));
   dbButton.setAttribute('aria-expanded', 'false');
@@ -194,13 +186,14 @@ function siteRow(site, children = []) {
         starButton(site.domain),
         iconButton('folder', 'Gerenciador de arquivos', () => openExternal('file-browser', { orderId, domain: site.domain })),
         dbButton,
+        isChild ? null : iconButton('git', 'Git e auto deploy', () => openGitModal({ orderId, domain: site.domain })),
         iconButton('code', 'Versão PHP', () => { phpDomain = site.domain; location.hash = 'ferramentas'; phpControls?.select(site.domain); }),
         h('a', {
           class: 'btn btn-ghost btn-icon btn-sm', href: `https://hpanel.hostinger.com/websites/${encodeURIComponent(site.domain)}`,
           target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Abrir no hPanel', 'data-tip': 'Abrir no hPanel',
         }, icon('external')))),
     dbs,
-    children.length ? h('div', { class: 'site-children' }, children.map((c) => siteRow(c))) : null);
+    children.length ? h('div', { class: 'site-children' }, children.map((c) => siteRow(c, [], true))) : null);
 }
 
 const favTip = (on) => (on ? 'Remover dos favoritos' : 'Adicionar aos favoritos');
@@ -360,7 +353,7 @@ function sshCard() {
     clear(body).append(
       h('pre', { class: 'code' }, key),
       h('div', { class: 'row' },
-        h('button', { type: 'button', class: 'btn btn-secondary', on: { click: () => copy(key, 'Chave copiada.') } }, icon('copy'), 'Copiar'),
+        h('button', { type: 'button', class: 'btn btn-secondary', on: { click: () => copyText(key, 'Chave copiada.') } }, icon('copy'), 'Copiar'),
         h('button', {
           type: 'button', class: 'btn btn-danger-ghost',
           on: {

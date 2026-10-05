@@ -75,6 +75,62 @@ final class ValidateTest extends TestCase
         Validate::phpVersion("8.2\n");
     }
 
+    public function testRepoUrlAcceptsHttpsAndScpSyntax(): void
+    {
+        self::assertSame('https://github.com/acme/site.git', Validate::repoUrl(' https://github.com/acme/site.git '));
+        self::assertSame('git@github.com:acme/site.git', Validate::repoUrl('git@github.com:acme/site.git'));
+        self::assertSame('ssh://git@gitlab.com/acme/site.git', Validate::repoUrl('ssh://git@gitlab.com/acme/site.git'));
+    }
+
+    #[DataProvider('badRepoUrls')]
+    public function testRepoUrlRejects(mixed $v): void
+    {
+        $this->expectException(ApiError::class);
+        Validate::repoUrl($v);
+    }
+
+    public static function badRepoUrls(): array
+    {
+        return [[''], [null], ['github.com/acme/site.git'], ['http://github.com/acme/site.git'], ['git@github.com'], ["git@github.com:acme/\nsite.git"], [str_repeat('a', 513)]];
+    }
+
+    public function testBranchAndDirectory(): void
+    {
+        self::assertSame('feature/deploy-v2', Validate::branch(' feature/deploy-v2 '));
+        self::assertSame('', Validate::directory(''));
+        self::assertSame('', Validate::directory('/'));
+        self::assertSame('app/publico', Validate::directory('/app/publico/'));
+    }
+
+    #[DataProvider('badPaths')]
+    public function testBranchAndDirectoryRejectTraversalAndGarbage(string $method, mixed $v): void
+    {
+        $this->expectException(ApiError::class);
+        Validate::$method($v);
+    }
+
+    public static function badPaths(): array
+    {
+        return [
+            ['branch', ''],
+            ['branch', null],
+            ['branch', '-rf'],
+            ['branch', 'main; rm'],
+            ['branch', '../main'],
+            ['branch', "ma\nin"],
+            ['directory', '../public_html'],
+            ['directory', 'app publico'],
+            ['directory', 'app;rm'],
+        ];
+    }
+
+    public function testRepoIdRejectsZeroAndGarbage(): void
+    {
+        self::assertSame(702822, Validate::repoId('702822'));
+        $this->expectException(ApiError::class);
+        Validate::repoId('0');
+    }
+
     public function testJwtTrimsAndRejectsNonTokens(): void
     {
         $t = TestJwt::make(2000000000);
