@@ -1,2 +1,7 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Texto normalizado e gravado com LF em qualquer sistema operacional.
+* text=auto eol=lf
+
+*.png binary
+*.webp binary
+*.ico binary
+*.woff2 binary

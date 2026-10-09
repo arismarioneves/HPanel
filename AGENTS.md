@@ -12,6 +12,10 @@ Guia para agentes (e pessoas) que alteram este repositório.
 
 - Não criar diretórios em runtime. Não use `mkdir()` em código de produção. Pastas necessárias devem existir previamente no projeto/deploy.
 
+### Fim de linha
+
+- Todo arquivo de texto usa **LF** (`.gitattributes` com `eol=lf` e `.editorconfig`). Não grave CRLF.
+
 ## Sobre o projeto
 
 HPanel é um painel leve para gerenciar vários servidores e sites da Hostinger usando o JWT da sessão do próprio usuário no hPanel. Conversa só com as **APIs internas (não oficiais)** do hPanel — elas podem mudar sem aviso.
