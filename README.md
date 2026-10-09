@@ -112,7 +112,7 @@ cp config.exemplo.php config.php
 
 ### Nginx
 
-No Apache o `.htaccess` já bloqueia tudo que não é público. No Nginx, use o bloco equivalente (instalação na **raiz** do domínio, `base => '/'`):
+No Apache o `.htaccess` já bloqueia tudo que não é público e serve as páginas e a API sem `.php` na URL (`/connect`, `/server?orderId=…`, `/api/session`); um endereço com `.php` digitado recebe 301 para a forma sem extensão. No Nginx, use o bloco equivalente (instalação na **raiz** do domínio, `base => '/'`):
 
 ```nginx
 location ~ ^/(storage|lib|partials|tests|tools|vendor|docs)(/|$) { deny all; }
@@ -129,6 +129,8 @@ location ~ ^/hpanel/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json
 location ~ /\. { deny all; }
 location /hpanel/ { try_files $uri $uri/ $uri.php?$query_string; }
 ```
+
+O painel só gera URLs sem `.php`, então o `try_files` acima basta; o redirecionamento 301 de endereços antigos com `.php` existe apenas no `.htaccess`.
 
 ### Desenvolvimento
 

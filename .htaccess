@@ -9,6 +9,16 @@ Options -Indexes
     RewriteRule ^(storage|lib|partials|tests|tools|vendor|docs)(/|$) - [F,L]
     RewriteRule ^(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ - [F,L]
 
+    # URL com .php digitada ou antiga: 301 para a forma sem extensão (index.php vira a pasta).
+    # Só GET/HEAD: um POST redirecionado perderia o corpo. THE_REQUEST é a linha original,
+    # então a reescrita interna abaixo não volta a cair aqui.
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+    RewriteCond %{THE_REQUEST} \s/+((?:[^\s?]*/)?)index\.php[\s?]
+    RewriteRule ^ /%1 [R=301,NE,L]
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+    RewriteCond %{THE_REQUEST} \s/+([^\s?]+)\.php[\s?]
+    RewriteRule ^ /%1 [R=301,NE,L]
+
     # URLs sem .php
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.php -f

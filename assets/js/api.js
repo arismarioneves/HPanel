@@ -31,7 +31,7 @@ function tabStorage() {
 }
 
 async function request(method, path, params) {
-  let url = `api/${path}.php`;
+  let url = `api/${path}`;
   const init = { method, credentials: 'same-origin', headers: { Accept: 'application/json' } };
   if (method === 'GET' && params) url += `?${new URLSearchParams(params)}`;
   if (method === 'POST') {
