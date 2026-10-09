@@ -186,6 +186,40 @@ final class HostingerSourceTest extends TestCase
         self::assertSame(['7.4', '8.0', '8.1', '8.2', '8.3'], array_column($info['versions'], 'version'));
     }
 
+    public function testSetPhpVersionAcceptsEmptySuccessBody(): void
+    {
+        $http = new FakeTransport([['status' => 200, 'body' => '']]);
+        (new HostingerSource($http, 't', ''))->setPhpVersion('u', 'd.com', 1, '8.3');
+        self::assertCount(1, $http->calls);
+        self::assertSame(['phpVersion' => '8.3'], json_decode((string) $http->calls[0]['body'], true));
+    }
+
+    public function testSetPhpVersionWithoutResponseSucceedsWhenVersionWasApplied(): void
+    {
+        $http = new FakeTransport([['status' => 0], self::ok(['data' => ['version' => '8.3']])]);
+        (new HostingerSource($http, 't', ''))->setPhpVersion('u', 'd.com', 1, '8.3');
+        self::assertSame('GET', $http->calls[1]['method']);
+    }
+
+    public function testSetPhpVersionWithoutResponseFailsWhenVersionDidNotChange(): void
+    {
+        $http = new FakeTransport([['status' => 0], self::ok(['data' => ['version' => '8.1']])]);
+        $this->expectExceptionObject(ApiError::upstream());
+        (new HostingerSource($http, 't', ''))->setPhpVersion('u', 'd.com', 1, '8.3');
+    }
+
+    public function testSetPhpVersion401IsSessionExpiredWithoutRechecking(): void
+    {
+        $http = new FakeTransport([['status' => 401]]);
+        try {
+            (new HostingerSource($http, 't', ''))->setPhpVersion('u', 'd.com', 1, '8.3');
+            self::fail('esperava session_expired');
+        } catch (ApiError $e) {
+            self::assertSame('session_expired', $e->errorCode);
+        }
+        self::assertCount(1, $http->calls);
+    }
+
     public function testGitReposFlattensAutoDeployInfoAndTrimsInstallPath(): void
     {
         $http = new FakeTransport([self::ok(['data' => [

@@ -173,7 +173,19 @@ final class HostingerSource implements DataSource
 
     public function setPhpVersion(string $username, string $domain, int $orderId, string $version): void
     {
-        $this->json('PATCH', self::phpPath($username, $domain), self::scope($username, $domain, $orderId), ['phpVersion' => $version]);
+        $r = $this->raw('PATCH', self::phpPath($username, $domain), self::scope($username, $domain, $orderId), ['phpVersion' => $version]);
+        if ($r['status'] >= 200 && $r['status'] < 300) {
+            return; // corpo vazio também é sucesso
+        }
+        if ($r['status'] === 401) {
+            $this->fail(401, 'PATCH php/version');
+        }
+        // A Hostinger aplica a troca mas costuma segurar a resposta até estourar o tempo (ou devolver erro):
+        // a versão atual é quem diz se deu certo.
+        if ($this->phpVersion($username, $domain, $orderId)['current'] === $version) {
+            return;
+        }
+        $this->fail($r['status'], 'PATCH php/version');
     }
 
     public function gitRepos(string $username, string $domain, int $orderId): array

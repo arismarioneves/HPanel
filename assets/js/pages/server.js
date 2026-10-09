@@ -463,12 +463,14 @@ function phpCard() {
     const version = versionSel.value;
     save.disabled = true;
     save.setAttribute('aria-busy', 'true');
+    status.textContent = 'Aplicando… a Hostinger pode levar até 30 s para confirmar.';
     try {
       await post('set-php-version', { orderId, domain, version });
       clearCache();
       toast(`PHP ${version} ativado em ${domain}.`, 'ok');
       await load();
     } catch (err) {
+      status.textContent = '';
       toast(err.message, 'danger');
       save.disabled = false;
     } finally {
