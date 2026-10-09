@@ -92,6 +92,10 @@ function renderHead() {
   }
   clear($('#serverActions')).append(
     detail.cachedAt ? h('span', { class: 'muted small' }, `Dados ${relTime(detail.cachedAt)}`) : null,
+    h('button', {
+      type: 'button', class: 'btn btn-secondary btn-sm', 'data-tip': 'Raiz da conta, com todos os sites',
+      on: { click: () => openExternal('file-browser', { orderId }) },
+    }, icon('folder'), 'Gerenciador de Arquivos'),
     h('button', { type: 'button', class: 'btn btn-secondary btn-sm', on: { click: () => init(true) } }, icon('refresh'), 'Atualizar'));
 }
 

@@ -70,6 +70,7 @@ final class DemoSourceTest extends TestCase
     {
         yield 'phpMyAdmin' => [static fn(DemoSource $d) => $d->phpMyAdminLink('u900001', 'u900001_wp', 'aurora.example', 900001)];
         yield 'file browser' => [static fn(DemoSource $d) => $d->fileBrowserLink('u900001', 'aurora.example', 900001)];
+        yield 'root file browser' => [static fn(DemoSource $d) => $d->rootFileBrowserLink('u900001', 'aurora.example', 900001)];
         yield 'set PHP' => [static fn(DemoSource $d) => $d->setPhpVersion('u900001', 'aurora.example', 900001, '8.3')];
         yield 'create key' => [static fn(DemoSource $d) => $d->createGitKey('u900001', 'aurora.example', 900001)];
         yield 'delete key' => [static fn(DemoSource $d) => $d->deleteGitKey('u900001', 'aurora.example', 900001)];

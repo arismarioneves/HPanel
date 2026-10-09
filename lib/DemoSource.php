@@ -42,6 +42,11 @@ final class DemoSource implements DataSource
         throw self::blocked();
     }
 
+    public function rootFileBrowserLink(string $username, string $domain, int $orderId): string
+    {
+        throw self::blocked();
+    }
+
     public function phpVersion(string $username, string $domain, int $orderId): array
     {
         return $this->fx['phpVersion'];

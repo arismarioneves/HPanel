@@ -53,6 +53,13 @@ final class HostingerSource implements DataSource
         return self::link($this->json('GET', $path, self::scope($username, $domain, $orderId)));
     }
 
+    public function rootFileBrowserLink(string $username, string $domain, int $orderId): string
+    {
+        // Sem `vhost` a Hostinger abre o gerenciador na raiz da conta (todos os sites).
+        $path = self::accountPath($username) . '/file-browser-link?locale=pt_BR';
+        return self::link($this->json('GET', $path, self::scope($username, $domain, $orderId)));
+    }
+
     public function phpVersion(string $username, string $domain, int $orderId): array
     {
         $d = $this->json('GET', self::phpPath($username, $domain), self::scope($username, $domain, $orderId))['data'] ?? [];

@@ -18,7 +18,7 @@ Painel para gerenciar todos os seus sites da Hostinger em um só lugar, sem nave
 - **⭐ Favoritos** - Fixe os sites que você mais usa no topo do dashboard
 - **🔎 Busca Ctrl+K** - Paleta de busca rápida por sites e servidores em toda a conta
 - **🌐 Websites** - Domínios, subdomínios e addons de cada servidor
-- **📁 Gerenciador de Arquivos** - Link direto para cada domínio
+- **📁 Gerenciador de Arquivos** - Link direto para cada domínio ou para a raiz da conta (botão no topo do servidor)
 - **🗄️ Bancos de dados** - Lista bancos com acesso ao phpMyAdmin
 - **🐘 Versão PHP** - Altere a versão PHP de qualquer domínio
 - **🔑 Chave SSH (Git)** - Veja, crie ou recrie a chave SSH de deploy de cada servidor
@@ -236,6 +236,7 @@ O dashboard usa APIs internas do hPanel (não oficiais):
 - `/api/wh-api/api/hapi/v1/accounts/{username}/vhosts/{domain}/php/version` - Versão PHP
 - `/api/wh-api/api/hapi/v1/accounts/{username}/git-key` - Chave SSH de Git (GET/POST/DELETE)
 - `/api/auth/api/external/v1/auth/refresh` - Renovação do JWT (sessão deslizante)
+- `/api/wh-api/api/hapi/v1/accounts/{username}/file-browser-link` - Gerenciador de arquivos (com `vhost` = pasta do site; sem = raiz da conta)
 
 ### Limitações
 

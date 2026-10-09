@@ -22,6 +22,9 @@ interface DataSource
 
     public function fileBrowserLink(string $username, string $domain, int $orderId): string;
 
+    /** Gerenciador de arquivos na raiz da conta (todos os sites do servidor). */
+    public function rootFileBrowserLink(string $username, string $domain, int $orderId): string;
+
     /** @return array{current:?string, currentFull:?string, versions:list<array{version:string,label:string}>} */
     public function phpVersion(string $username, string $domain, int $orderId): array;
 

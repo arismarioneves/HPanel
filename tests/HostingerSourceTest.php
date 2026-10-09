@@ -75,6 +75,15 @@ final class HostingerSourceTest extends TestCase
             ->fileBrowserLink('u', 'd.com', 1);
     }
 
+    public function testRootFileBrowserLinkOmitsVhost(): void
+    {
+        $http = new FakeTransport([self::ok(['data' => ['link' => 'https://fm.example/root']])]);
+        $link = (new HostingerSource($http, 't', ''))->rootFileBrowserLink('u123', 'loja.com', 42);
+
+        self::assertSame('https://fm.example/root', $link);
+        self::assertStringNotContainsString('vhost=', $http->calls[0]['url']);
+    }
+
     public function testPhpVersionMergesAndSortsVersions(): void
     {
         $http = new FakeTransport([self::ok(['data' => [
