@@ -24,6 +24,8 @@ Painel para gerenciar todos os seus sites da Hostinger em um só lugar, sem nave
 - **🔑 Chave SSH (Git)** - Veja, crie ou recrie a chave SSH de deploy de cada servidor
 - **🌿 Git e auto deploy** - Repositórios de cada domínio: criar, implantar na hora, ver a saída do último deploy, copiar o webhook e excluir
 - **📈 Uso** - Disco, inodes, RAM, CPU; respostas em cache na aba (exibe na hora e atualiza em segundo plano)
+- **📉 Gráficos de recursos** - CPU, memória, PHP workers, processos, I/O e IOPS em 1 h / 6 h / 24 h / 7 dias / 30 dias, com média, pico, limite do plano e marcação de quando o limite foi atingido
+- **🛡️ Antimalware** - Status do Monarx na visão geral do servidor (protegido, arquivos suspeitos, último scan)
 - **⏱️ Sessão** - Indicador no cabeçalho com a validade do token; renovação automática e em 1 clique
 - **🌓 Tema** - Claro, escuro ou seguir o sistema (em Configurações)
 
@@ -178,7 +180,7 @@ O JWT do hPanel usa **sessão deslizante**: enquanto ainda não expirou de vez, 
 HPanel/
 ├── index.php            # Landing (sem sessão) ou dashboard: Atenção, Favoritos, servidores
 ├── connect.php          # Conectar: colar o token JWT
-├── server.php           # Servidor em abas (sites, bancos, uso, chave SSH)
+├── server.php           # Servidor em abas (visão geral, sites, bancos, ferramentas)
 ├── settings.php         # Configurações (sessão, renovar, sair, tema)
 ├── config.exemplo.php   # Modelo de configuração local
 ├── .htaccess            # Bloqueia tudo que não é público
@@ -196,6 +198,7 @@ HPanel/
 │   │   ├── favorites.js # Favoritos (localStorage)
 │   │   ├── attention.js # Seção Atenção
 │   │   ├── swr.js       # Cache stale-while-revalidate (sessionStorage)
+│   │   ├── chart.js     # Gráficos SVG da visão geral (sem biblioteca)
 │   │   ├── session-pill.js / session-status.js  # Validade do token
 │   │   ├── jwt.js       # Leitura/validação do token colado
 │   │   └── demo.js      # Botão "Ver demonstração"
@@ -236,6 +239,8 @@ O dashboard usa APIs internas do hPanel (não oficiais):
 - `/api/wh-api/api/hapi/v1/accounts/{username}/vhosts/{domain}/php/version` - Versão PHP
 - `/api/wh-api/api/hapi/v1/accounts/{username}/git-key` - Chave SSH de Git (GET/POST/DELETE)
 - `/api/auth/api/external/v1/auth/refresh` - Renovação do JWT (sessão deslizante)
+- `/api/wh-api/api/hapi/v1/accounts/{username}/metrics/lve` - Séries de CPU, memória, I/O, IOPS, PHP workers e processos
+- `/api/wh-api/api/hapi/v1/accounts/{username}/malware/overview` - Status do antimalware
 - `/api/wh-api/api/hapi/v1/accounts/{username}/file-browser-link` - Gerenciador de arquivos (com `vhost` = pasta do site; sem = raiz da conta)
 
 ### Limitações

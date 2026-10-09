@@ -12,6 +12,8 @@ final class HostingerSource implements DataSource
     private const PAGE_SIZE = 25;
     private const MAX_PAGES = 50;
     private const KEY_EXISTS = 9999;
+    /** Séries LVE (CloudLinux) devolvidas por metrics/lve, na ordem exibida. */
+    public const METRICS = ['cpu', 'memory', 'ep', 'nproc', 'io', 'iops'];
 
     public function __construct(private HttpTransport $http, private string $token, private string $gaid)
     {
@@ -58,6 +60,58 @@ final class HostingerSource implements DataSource
         // Sem `vhost` a Hostinger abre o gerenciador na raiz da conta (todos os sites).
         $path = self::accountPath($username) . '/file-browser-link?locale=pt_BR';
         return self::link($this->json('GET', $path, self::scope($username, $domain, $orderId)));
+    }
+
+    public function metrics(string $username, string $domain, int $orderId, int $rangeMinutes, int $stepMinutes): array
+    {
+        $path = self::accountPath($username) . "/metrics/lve?rangeMinutes={$rangeMinutes}&stepSizeMinutes={$stepMinutes}";
+        $data = $this->json('GET', $path, self::scope($username, $domain, $orderId))['data'] ?? [];
+        $series = [];
+        foreach (self::METRICS as $key) {
+            $m = $data[$key] ?? null;
+            if (!is_array($m) || !is_array($m['datapoints'] ?? null)) {
+                continue;
+            }
+            $points = [];
+            foreach ($m['datapoints'] as $p) {
+                if (is_array($p) && isset($p['timestamp'])) {
+                    $points[] = [(int) $p['timestamp'], (float) ($p['usage'] ?? 0), (int) ($p['faults'] ?? 0)];
+                }
+            }
+            $series[$key] = ['limit' => (float) ($m['limit'] ?? 0), 'points' => $points];
+        }
+        // O balde mais recente ainda não foi agregado e chega zerado em todas as séries: descartar.
+        while ($series !== [] && self::lastBucketEmpty($series)) {
+            foreach ($series as &$s) {
+                array_pop($s['points']);
+            }
+            unset($s);
+        }
+        return $series;
+    }
+
+    private static function lastBucketEmpty(array $series): bool
+    {
+        foreach ($series as $s) {
+            $last = end($s['points']);
+            if ($last === false || $last[1] > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function malware(string $username, string $domain, int $orderId): array
+    {
+        $d = $this->json('GET', self::accountPath($username) . '/malware/overview', self::scope($username, $domain, $orderId))['data'] ?? [];
+        return [
+            'protection' => ($d['activeProtection'] ?? null) === 'enabled',
+            'status' => self::str($d['lastReportedStatus'] ?? null),
+            'scanStatus' => self::str($d['scanStatus'] ?? null),
+            'lastScanEnd' => self::str($d['lastScanEnd'] ?? null),
+            'compromised' => (int) ($d['compromisedNonRemediated'] ?? $d['compromised'] ?? 0),
+            'malicious' => (int) ($d['maliciousNonRemediated'] ?? $d['malicious'] ?? 0),
+        ];
     }
 
     public function phpVersion(string $username, string $domain, int $orderId): array

@@ -84,6 +84,53 @@ final class HostingerSourceTest extends TestCase
         self::assertStringNotContainsString('vhost=', $http->calls[0]['url']);
     }
 
+    public function testMetricsKeepsKnownSeriesAsCompactPoints(): void
+    {
+        $http = new FakeTransport([self::ok(['data' => [
+            'cpu' => ['limit' => 100, 'label' => 'CPU', 'datapoints' => [
+                ['timestamp' => 1000, 'usage' => 3, 'faults' => 0],
+                ['timestamp' => 2200, 'usage' => 100, 'faults' => 2],
+                'lixo',
+            ]],
+            'memory' => ['limit' => 12288, 'datapoints' => [['timestamp' => 1000, 'usage' => 646.5]]],
+            'novaSerie' => ['limit' => 1, 'datapoints' => []],
+            'iops' => ['limit' => 3072],
+        ]])]);
+        $series = (new HostingerSource($http, 't', ''))->metrics('u1', 'd.com', 7, 1440, 20);
+
+        self::assertStringContainsString('/metrics/lve?rangeMinutes=1440&stepSizeMinutes=20', $http->calls[0]['url']);
+        self::assertSame(['cpu', 'memory'], array_keys($series));
+        self::assertSame(['limit' => 100.0, 'points' => [[1000, 3.0, 0], [2200, 100.0, 2]]], $series['cpu']);
+        self::assertSame([[1000, 646.5, 0]], $series['memory']['points']);
+    }
+
+    public function testMetricsDropsTrailingBucketThatIsZeroEverywhere(): void
+    {
+        $pts = static fn(array $u) => array_map(static fn($v, $i) => ['timestamp' => $i, 'usage' => $v], $u, array_keys($u));
+        $http = new FakeTransport([self::ok(['data' => [
+            'cpu' => ['limit' => 100, 'datapoints' => $pts([2, 0, 0])],
+            'memory' => ['limit' => 10, 'datapoints' => $pts([5, 4, 0])],
+        ]])]);
+        $series = (new HostingerSource($http, 't', ''))->metrics('u1', 'd.com', 7, 60, 1);
+
+        self::assertSame([[0, 2.0, 0], [1, 0.0, 0]], $series['cpu']['points'], 'zero real no meio é mantido');
+        self::assertCount(2, $series['memory']['points']);
+    }
+
+    public function testMalwarePrefersNonRemediatedCounts(): void
+    {
+        $http = new FakeTransport([self::ok(['data' => [
+            'activeProtection' => 'enabled', 'lastReportedStatus' => 'good', 'scanStatus' => 'running',
+            'lastScanEnd' => '2026-10-09T04:51:02Z', 'compromised' => 3, 'compromisedNonRemediated' => 0, 'malicious' => 1,
+        ]])]);
+        $m = (new HostingerSource($http, 't', ''))->malware('u1', 'd.com', 7);
+
+        self::assertTrue($m['protection']);
+        self::assertSame(0, $m['compromised']);
+        self::assertSame(1, $m['malicious']);
+        self::assertSame('running', $m['scanStatus']);
+    }
+
     public function testPhpVersionMergesAndSortsVersions(): void
     {
         $http = new FakeTransport([self::ok(['data' => [

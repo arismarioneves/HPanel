@@ -25,6 +25,15 @@ interface DataSource
     /** Gerenciador de arquivos na raiz da conta (todos os sites do servidor). */
     public function rootFileBrowserLink(string $username, string $domain, int $orderId): string;
 
+    /**
+     * Séries LVE do servidor (chaves de HostingerSource::METRICS presentes na resposta).
+     * @return array<string, array{limit:float, points:list<array{0:int,1:float,2:int}>}> pontos = [unix, uso, faults]
+     */
+    public function metrics(string $username, string $domain, int $orderId, int $rangeMinutes, int $stepMinutes): array;
+
+    /** @return array{protection:bool, status:?string, scanStatus:?string, lastScanEnd:?string, compromised:int, malicious:int} */
+    public function malware(string $username, string $domain, int $orderId): array;
+
     /** @return array{current:?string, currentFull:?string, versions:list<array{version:string,label:string}>} */
     public function phpVersion(string $username, string $domain, int $orderId): array;
 

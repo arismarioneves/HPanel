@@ -6,7 +6,8 @@ import { errorBlock, emptyBlock, skeletonLines } from '../states.js';
 import { toast } from '../toast.js';
 import { confirmDialog } from '../modal.js';
 import { meter, badge, section, fact, iconButton, openExternal, copyText } from '../components.js';
-import { formatDate, formatMb, relTime } from '../format.js';
+import { formatDate, formatMb, formatNumber, level, percent, relTime } from '../format.js';
+import { areaChart, donut } from '../chart.js';
 import { groupSites } from '../sites.js';
 import { openGitModal } from '../git.js';
 import * as favs from '../favorites.js';
@@ -56,6 +57,7 @@ async function init(refresh = false) {
   const tab = highlightTab();
   const p = panel(tab);
   loadError = null;
+  refreshExtras = refresh;
   clear(p).append(...skeletonLines(6));
   let shown = null;
   try {
@@ -100,39 +102,172 @@ function renderHead() {
 }
 
 /* ===== Visão geral ===== */
+const RANGES = [['1h', '1 h'], ['6h', '6 h'], ['24h', '24 h'], ['7d', '7 dias'], ['30d', '30 dias']];
+const RANGE_KEY = 'hp_metrics_range';
+const savedRange = () => {
+  try { const r = localStorage.getItem(RANGE_KEY); return RANGES.some(([k]) => k === r) ? r : '24h'; } catch { return '24h'; }
+};
+let metricsRange = savedRange();
+let refreshExtras = false;
+
+const num = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
+const METRICS = [
+  ['cpu', 'CPU', (v) => `${num.format(v)} %`],
+  ['memory', 'Memória', (v) => formatMb(v)],
+  ['ep', 'PHP workers', (v) => num.format(v)],
+  ['nproc', 'Processos', (v) => num.format(v)],
+  ['io', 'Disco I/O', (v) => (v >= 1024 ? `${num.format(v / 1024)} MB/s` : `${num.format(v)} KB/s`)],
+  ['iops', 'IOPS', (v) => num.format(v)],
+];
+const METRIC_HINT = {
+  cpu: 'Uso de CPU da conta (100 % = todos os núcleos do plano).',
+  memory: 'RAM usada pelos processos da conta.',
+  ep: 'Requisições PHP simultâneas (entry processes). No limite, visitantes recebem erro 503/508.',
+  nproc: 'Processos ativos da conta (PHP, cron, SSH).',
+  io: 'Velocidade de leitura/escrita em disco.',
+  iops: 'Operações de disco por segundo.',
+};
+
 function renderVisao(p) {
   const a = detail.account;
-  if (!a) {
-    p.append(emptyBlock('Detalhes da conta indisponíveis agora.', 'A Hostinger não retornou os dados de uso. Use "Atualizar" para tentar de novo — as outras abas funcionam normalmente.'));
-    return;
-  }
-  const usage = [['storage', 'Armazenamento', 'mb'], ['inodes', 'Inodes', 'n'], ['databases', 'Bancos de dados', 'n'], ['subdomains', 'Subdomínios', 'n'], ['ftp_accounts', 'Contas FTP', 'n']]
-    .filter(([k]) => a.usage?.[k]?.limit > 0)
-    .map(([k, label, fmt]) => meter(label, a.usage[k].value, a.usage[k].limit, fmt));
-  const lim = a.plan_limits || {};
-  const backup = Number(a.backup_interval || 0);
+  const malware = statusChip('Antimalware', null, 'muted', 'Carregando…');
+  const status = h('div', { class: 'status-strip' }, malware);
+  const resources = h('div', { class: 'chart-grid' }, Array.from({ length: 6 }, () => h('div', { class: 'skeleton skeleton-chart' })));
 
   p.append(
-    section('Uso de recursos', usage.length ? h('div', { class: 'meter-grid' }, usage) : emptyBlock('Sem dados de uso.')),
-    section('Limites do plano', h('dl', { class: 'facts' },
-      fact('CPU', lim.cpu_cores != null ? `${lim.cpu_cores} núcleos` : null),
-      fact('RAM', lim.ram ? formatMb(lim.ram / 1024) : null),
-      fact('Entry processes', lim.entry_processes),
-      fact('Processos ativos', lim.active_processes),
-      fact('Máx. addons', lim.max_addons),
-      fact('Banda', 'Ilimitada'))),
-    section('Informações', h('dl', { class: 'facts' },
-      fact('Hostname', a.server?.hostname),
-      fact('Web server', a.web_server),
-      fact('Banco de dados', a.database_version),
-      fact('Host do banco', a.server?.database?.hostname),
-      fact('IP do banco', a.server?.database?.ip),
-      fact('Usuário', a.username),
-      fact('Usuário FTP', a.ftp_user),
-      fact('Shell (SSH)', a.shell_enabled ? 'Habilitado' : 'Desabilitado'),
-      fact('Backup', backup === 1 ? 'Diário' : backup > 0 ? `A cada ${backup} dias` : 'Indisponível'),
-      fact('Criado em', formatDate(a.created_at)))),
-  );
+    status,
+    a ? storageSection(a) : emptyBlock('Detalhes da conta indisponíveis agora.', 'A Hostinger não retornou os dados de uso. Use "Atualizar" para tentar de novo — as outras abas funcionam normalmente.'),
+    section('Recursos', resources, rangePicker(resources)),
+    a ? infoSection(a) : null);
+
+  if (a) {
+    const backup = Number(a.backup_interval || 0);
+    status.append(
+      statusChip('Backup', null, backup > 0 ? 'ok' : 'warn', backup === 1 ? 'Diário' : backup > 0 ? `A cada ${backup} dias` : 'Indisponível'),
+      statusChip('SSH', null, a.shell_enabled ? 'ok' : 'muted', a.shell_enabled ? 'Habilitado' : 'Desabilitado'),
+      a.web_server ? statusChip('Web server', null, 'muted', a.web_server) : null,
+      a.database_version ? statusChip('Banco', null, 'muted', a.database_version) : null);
+  }
+  loadMetrics(resources);
+  loadMalware(malware);
+  refreshExtras = false;
+}
+
+function statusChip(label, tip, tone, value) {
+  return h('span', { class: `status-chip status-${tone}`, 'data-tip': tip || null },
+    h('span', { class: `dot dot-${tone === 'muted' ? 'off' : tone}` }), h('span', { class: 'muted' }, label), h('strong', {}, value));
+}
+
+function storageSection(a) {
+  const u = a.usage || {};
+  const big = [['storage', 'Disco', formatMb], ['inodes', 'Inodes (arquivos)', formatNumber]]
+    .filter(([k]) => u[k]?.limit > 0)
+    .map(([k, label, fmt]) => {
+      const pct = percent(u[k].value, u[k].limit);
+      const tone = level(pct);
+      return h('div', { class: `storage-card meter-${tone}` },
+        donut(pct, tone),
+        h('div', { class: 'storage-text' },
+          h('span', { class: 'muted small' }, label),
+          h('strong', { class: 'storage-pct' }, `${num.format(pct)}%`),
+          h('span', { class: 'small' }, `${fmt(u[k].value)} de ${fmt(u[k].limit)}`,
+            h('span', { class: 'muted' }, ` · ${fmt(Math.max(0, u[k].limit - u[k].value))} livres`))));
+    });
+  const small = [['databases', 'Bancos de dados'], ['subdomains', 'Subdomínios']]
+    .filter(([k]) => u[k]?.limit > 0)
+    .map(([k, label]) => meter(`${label} · ${formatNumber(u[k].value)} de ${formatNumber(u[k].limit)}`, u[k].value, u[k].limit, 'n', true));
+  if (!big.length && !small.length) return section('Armazenamento', emptyBlock('Sem dados de uso.'));
+  return section('Armazenamento', h('div', { class: 'storage' }, big, small.length ? h('div', { class: 'storage-small' }, small) : null));
+}
+
+function infoSection(a) {
+  const lim = a.plan_limits || {};
+  return section('Informações', h('dl', { class: 'facts facts-compact' },
+    fact('Hostname', a.server?.hostname),
+    fact('Usuário', a.username),
+    fact('Host do banco', a.server?.database?.hostname),
+    fact('IP do banco', a.server?.database?.ip),
+    fact('CPU', lim.cpu_cores != null ? `${lim.cpu_cores} núcleos` : null),
+    fact('RAM', lim.ram ? formatMb(lim.ram / 1024) : null),
+    fact('Criado em', formatDate(a.created_at))));
+}
+
+function rangePicker(target) {
+  const buttons = RANGES.map(([key, label]) => h('button', {
+    type: 'button', class: 'chip-btn chip-sm', 'aria-pressed': String(key === metricsRange),
+    on: {
+      click: () => {
+        if (key === metricsRange) return;
+        metricsRange = key;
+        try { localStorage.setItem(RANGE_KEY, key); } catch { /* sem armazenamento */ }
+        buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(RANGES[i][0] === key)));
+        loadMetrics(target);
+      },
+    },
+  }, label));
+  return h('div', { class: 'chips', role: 'group', 'aria-label': 'Período' }, buttons);
+}
+
+async function loadMetrics(target) {
+  const range = metricsRange;
+  target.setAttribute('aria-busy', 'true');
+  try {
+    await cached('metrics', { orderId, range }, (data) => {
+      if (range !== metricsRange || !target.isConnected) return;
+      clear(target).append(...metricCards(data.series || {}, range));
+    }, { maxAgeMs: 60000, refresh: refreshExtras });
+  } catch (err) {
+    if (range === metricsRange && target.isConnected) clear(target).append(errorBlock(err, () => loadMetrics(target)));
+  } finally {
+    target.removeAttribute('aria-busy');
+  }
+}
+
+function metricCards(series, range) {
+  const long = range === '7d' || range === '30d';
+  const formatTime = (t) => new Date(t * 1000).toLocaleString('pt-BR', long
+    ? { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }
+    : { hour: '2-digit', minute: '2-digit' });
+  const cards = METRICS.filter(([k]) => series[k]).map(([k, label, format]) => {
+    const { limit, points } = series[k];
+    const values = points.map((pt) => pt[1]);
+    const now = values.at(-1) ?? 0;
+    const avg = values.length ? values.reduce((s, v) => s + v, 0) / values.length : 0;
+    const peak = Math.max(0, ...values);
+    const faults = points.reduce((s, pt) => s + pt[2], 0);
+    const tone = level(percent(peak, limit));
+    return h('article', { class: `chart-card chart-${faults > 0 ? 'danger' : tone}` },
+      h('header', { class: 'chart-head' },
+        h('span', { 'data-tip': METRIC_HINT[k] }, label),
+        faults > 0 ? badge(`${faults}× no limite`, 'danger') : null),
+      h('div', { class: 'chart-now' }, h('strong', {}, format(now)), h('span', { class: 'muted small' }, limit > 0 ? `de ${format(limit)}` : '')),
+      areaChart(points, { limit, format, formatTime, label: `${label}: ${format(now)} agora, pico ${format(peak)}` }),
+      h('footer', { class: 'chart-foot' },
+        h('span', {}, 'Média ', h('strong', {}, format(avg))),
+        h('span', {}, 'Pico ', h('strong', {}, format(peak)))));
+  });
+  return cards.length ? cards : [emptyBlock('Sem métricas para este período.')];
+}
+
+async function loadMalware(chip) {
+  let current = chip;
+  const swap = (next) => { current.replaceWith(next); current = next; };
+  try {
+    await cached('malware', { orderId }, (data) => {
+      if (current.isConnected) swap(malwareChip(data.malware));
+    }, { maxAgeMs: 600000, refresh: refreshExtras });
+  } catch {
+    if (current.isConnected) swap(statusChip('Antimalware', null, 'muted', 'Indisponível'));
+  }
+}
+
+function malwareChip(m) {
+  const infected = m.compromised + m.malicious;
+  const last = m.lastScanEnd ? `Último scan: ${new Date(m.lastScanEnd).toLocaleString('pt-BR')}` : null;
+  const scanning = m.scanStatus === 'running' ? ' · verificando' : '';
+  if (infected > 0) return statusChip('Antimalware', last, 'danger', `${infected} arquivo${infected > 1 ? 's' : ''} suspeito${infected > 1 ? 's' : ''}`);
+  if (!m.protection) return statusChip('Antimalware', last, 'warn', 'Proteção desativada');
+  return statusChip('Antimalware', last, 'ok', `Protegido${scanning}`);
 }
 
 /* ===== Sites ===== */
@@ -373,7 +508,12 @@ function sshCard() {
   return section('Chave SSH (Git)', body, detail.username ? `Conta ${detail.username}` : null);
 }
 
-const RENDER = { visao: renderVisao, sites: renderSites, bancos: renderBancos, ferramentas: renderFerramentas };
+const RENDER = {
+  visao: renderVisao,
+  sites: renderSites,
+  bancos: renderBancos,
+  ferramentas: renderFerramentas,
+};
 
 // <base href> faria "#aba" navegar para a raiz; troca o hash da URL atual.
 document.querySelector('.tabs').addEventListener('click', (event) => {

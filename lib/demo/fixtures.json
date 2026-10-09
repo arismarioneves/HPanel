@@ -624,5 +624,39 @@
       }
     ]
   },
-  "gitOutput": "Deployment start\nRepository git@github.com:acme-demo/site-aurora.git\nChecking project directory is empty\nProject directory is git repository\nOn branch main\nYour branch is up to date with origin/main.\n\nnothing to commit, working tree clean\nLooking for composer.lock file\nDeployment finished"
+  "gitOutput": "Deployment start\nRepository git@github.com:acme-demo/site-aurora.git\nChecking project directory is empty\nProject directory is git repository\nOn branch main\nYour branch is up to date with origin/main.\n\nnothing to commit, working tree clean\nLooking for composer.lock file\nDeployment finished",
+  "malware": {
+    "900001": {
+      "protection": true,
+      "status": "good",
+      "scanStatus": "finished",
+      "lastScanEnd": "2026-10-09T04:51:02Z",
+      "compromised": 0,
+      "malicious": 0
+    },
+    "900002": {
+      "protection": true,
+      "status": "bad",
+      "scanStatus": "finished",
+      "lastScanEnd": "2026-10-08T22:10:00Z",
+      "compromised": 2,
+      "malicious": 1
+    },
+    "900003": {
+      "protection": true,
+      "status": "good",
+      "scanStatus": "running",
+      "lastScanEnd": "2026-10-08T03:00:00Z",
+      "compromised": 0,
+      "malicious": 0
+    },
+    "900004": {
+      "protection": false,
+      "status": null,
+      "scanStatus": null,
+      "lastScanEnd": null,
+      "compromised": 0,
+      "malicious": 0
+    }
+  }
 }

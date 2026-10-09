@@ -59,6 +59,22 @@ final class DemoSourceTest extends TestCase
         self::assertStringContainsString('Deployment', $demo->gitRepoOutput('u900001', 'aurora.example', 900001, 611001));
     }
 
+    public function testDemoMetricsAreDeterministicWithinLimits(): void
+    {
+        $demo = new DemoSource();
+        $a = $demo->metrics('u900001', 'aurora.example', 900001, 1440, 20);
+        self::assertSame($a, $demo->metrics('u900001', 'aurora.example', 900001, 1440, 20));
+        self::assertSame(['cpu', 'memory', 'ep', 'nproc', 'io', 'iops'], array_keys($a));
+        foreach ($a as $s) {
+            self::assertCount(73, $s['points']);
+            foreach ($s['points'] as [, $usage]) {
+                self::assertLessThanOrEqual($s['limit'], $usage);
+            }
+        }
+        self::assertFalse($demo->malware('u900001', 'aurora.example', 900001)['compromised'] > 0);
+        self::assertGreaterThan(0, $demo->malware('u900002', 'pet-feliz.example', 900002)['compromised']);
+    }
+
     public function testUnknownServerIsNotFound(): void
     {
         $this->expectExceptionObject(ApiError::notFound('Servidor não encontrado nesta conta.'));
