@@ -13,6 +13,7 @@ use HPanel\Session;
 use HPanel\SessionStore;
 use HPanel\Tests\Support\FakeTransport;
 use PHPUnit\Framework\TestCase;
+use HPanel\Tests\Support\TempDir;
 
 final class DemoSourceTest extends TestCase
 {
@@ -20,7 +21,7 @@ final class DemoSourceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dir = sys_get_temp_dir() . '/hpanel-demo-' . bin2hex(random_bytes(4));
+        $this->dir = TempDir::make('hpanel-demo', 'sessions', 'rl');
     }
 
     protected function tearDown(): void

@@ -10,6 +10,7 @@ use HPanel\RateLimit;
 use HPanel\Session;
 use HPanel\SessionStore;
 use PHPUnit\Framework\TestCase;
+use HPanel\Tests\Support\TempDir;
 
 final class DemoStartTest extends TestCase
 {
@@ -17,7 +18,7 @@ final class DemoStartTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dir = sys_get_temp_dir() . '/hpanel-demo-' . bin2hex(random_bytes(4));
+        $this->dir = TempDir::make('hpanel-demo', 's', 'r');
     }
 
     protected function tearDown(): void

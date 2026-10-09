@@ -7,6 +7,7 @@ namespace HPanel\Tests;
 use HPanel\SessionStore;
 use HPanel\Tests\Support\TestJwt;
 use PHPUnit\Framework\TestCase;
+use HPanel\Tests\Support\TempDir;
 
 final class SessionStoreTest extends TestCase
 {
@@ -16,7 +17,7 @@ final class SessionStoreTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dir = sys_get_temp_dir() . '/hpanel-ss-' . bin2hex(random_bytes(4));
+        $this->dir = TempDir::make('hpanel-ss');
         $this->secret = random_bytes(32);
         $this->store = new SessionStore($this->dir, $this->secret);
     }

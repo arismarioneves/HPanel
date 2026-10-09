@@ -8,6 +8,7 @@ use HPanel\ApiError;
 use HPanel\Session;
 use HPanel\SessionStore;
 use PHPUnit\Framework\TestCase;
+use HPanel\Tests\Support\TempDir;
 
 final class SessionTest extends TestCase
 {
@@ -19,7 +20,7 @@ final class SessionTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dir = sys_get_temp_dir() . '/hpanel-s-' . bin2hex(random_bytes(4));
+        $this->dir = TempDir::make('hpanel-s');
         $this->store = new SessionStore($this->dir, random_bytes(32));
     }
 

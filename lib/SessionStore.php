@@ -15,9 +15,10 @@ final class SessionStore
 
     public function __construct(private string $dir, private string $secret)
     {
-        if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
-            error_log("HPanel: diretório não gravável: {$dir}");
-            throw new ConfigException('Não foi possível criar o diretório de sessões. Verifique a permissão de escrita em storage/ (ou em storage_dir).');
+        // A pasta vem do deploy (storage/sessions versionada); o painel não cria diretórios.
+        if (!is_dir($dir) || !is_writable($dir)) {
+            error_log("HPanel: diretório ausente ou sem escrita: {$dir}");
+            throw new ConfigException('A pasta storage/sessions não existe ou não tem permissão de escrita (com storage_dir, crie sessions/ dentro dela).');
         }
     }
 

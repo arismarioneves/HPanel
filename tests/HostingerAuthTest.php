@@ -11,6 +11,7 @@ use HPanel\SessionStore;
 use HPanel\Tests\Support\FakeTransport;
 use HPanel\Tests\Support\TestJwt;
 use PHPUnit\Framework\TestCase;
+use HPanel\Tests\Support\TempDir;
 
 final class HostingerAuthTest extends TestCase
 {
@@ -21,7 +22,7 @@ final class HostingerAuthTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dir = sys_get_temp_dir() . '/hpanel-auth-' . bin2hex(random_bytes(4));
+        $this->dir = TempDir::make('hpanel-auth');
         $this->store = new SessionStore($this->dir, random_bytes(32));
     }
 

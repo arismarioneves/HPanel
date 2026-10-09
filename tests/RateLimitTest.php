@@ -6,6 +6,7 @@ namespace HPanel\Tests;
 
 use HPanel\RateLimit;
 use PHPUnit\Framework\TestCase;
+use HPanel\Tests\Support\TempDir;
 
 final class RateLimitTest extends TestCase
 {
@@ -14,7 +15,7 @@ final class RateLimitTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dir = sys_get_temp_dir() . '/hpanel-rl-' . bin2hex(random_bytes(4));
+        $this->dir = TempDir::make('hpanel-rl');
         $this->limit = new RateLimit($this->dir, random_bytes(32));
     }
 

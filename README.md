@@ -106,7 +106,7 @@ cd HPanel
 cp config.exemplo.php config.php
 ```
    - Ajuste `base` (ex.: `'/hpanel/'`) se o painel estiver em uma subpasta.
-   - Recomendado: aponte `storage_dir` para uma pasta **fora** da pasta pública.
+   - Recomendado: aponte `storage_dir` para uma pasta **fora** da pasta pública. Nesse caso, crie dentro dela as subpastas `sessions/` e `ratelimit/` com permissão de escrita para o PHP — o painel não cria diretórios (no repositório elas já vêm em `storage/`).
 
 3. **Abra o painel** no navegador e clique em **Conectar** (ou **Ver demonstração**).
 

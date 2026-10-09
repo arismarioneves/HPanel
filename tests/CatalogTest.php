@@ -10,6 +10,7 @@ use HPanel\DataSource;
 use HPanel\Session;
 use HPanel\SessionStore;
 use PHPUnit\Framework\TestCase;
+use HPanel\Tests\Support\TempDir;
 
 final class CatalogTest extends TestCase
 {
@@ -18,7 +19,7 @@ final class CatalogTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dir = sys_get_temp_dir() . '/hpanel-cat-' . bin2hex(random_bytes(4));
+        $this->dir = TempDir::make('hpanel-cat');
     }
 
     protected function tearDown(): void

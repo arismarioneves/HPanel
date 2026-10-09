@@ -5,4 +5,10 @@
 /composer.lock
 /storage/*
 !/storage/.htaccess
+!/storage/sessions/
+!/storage/ratelimit/
+/storage/sessions/*
+/storage/ratelimit/*
+!/storage/sessions/index.php
+!/storage/ratelimit/index.php
 /.phpunit.cache
