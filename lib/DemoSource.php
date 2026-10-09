@@ -88,6 +88,26 @@ final class DemoSource implements DataSource
         return $this->fx['malware'][(string) $orderId] ?? throw ApiError::notFound('Servidor não encontrado nesta conta.');
     }
 
+    public function cronJobs(string $username, string $domain, int $orderId): array
+    {
+        return $this->fx['cronJobs'][(string) $orderId] ?? [];
+    }
+
+    public function createCronJob(string $username, string $domain, int $orderId, string $time, string $command): void
+    {
+        throw self::blocked();
+    }
+
+    public function deleteCronJob(string $username, string $domain, int $orderId, string $id): void
+    {
+        throw self::blocked();
+    }
+
+    public function cronJobOutput(string $username, string $domain, int $orderId, string $id): string
+    {
+        return $this->fx['cronOutput'][$id] ?? '';
+    }
+
     public function phpVersion(string $username, string $domain, int $orderId): array
     {
         return $this->fx['phpVersion'];

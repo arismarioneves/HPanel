@@ -131,6 +131,48 @@ final class HostingerSourceTest extends TestCase
         self::assertSame('running', $m['scanStatus']);
     }
 
+    public function testCronJobsExposePwkeyAsIdAndDropMalformedRows(): void
+    {
+        $http = new FakeTransport([self::ok(['data' => [
+            ['pwkey' => 'EfMQFV8kc7', 'username' => 'u1', 'time' => '0 0 * * *', 'command' => 'wget -O /dev/null https://a.com'],
+            ['time' => '0 0 * * *', 'command' => 'sem pwkey não dá para excluir'],
+            ['pwkey' => 'x', 'time' => null, 'command' => 'x'],
+        ]])]);
+        self::assertSame(
+            [['id' => 'EfMQFV8kc7', 'time' => '0 0 * * *', 'command' => 'wget -O /dev/null https://a.com']],
+            (new HostingerSource($http, 't', ''))->cronJobs('u1', 'd.com', 7)
+        );
+    }
+
+    public function testCreateCronJobPostsTimeAndCommand(): void
+    {
+        $http = new FakeTransport([['status' => 201, 'body' => '{"data":[]}']]);
+        (new HostingerSource($http, 't', ''))->createCronJob('u1', 'd.com', 7, '0 0 * * *', '/usr/bin/php /home/u1/public_html/x.php');
+
+        self::assertSame('POST', $http->calls[0]['method']);
+        self::assertStringContainsString('/accounts/u1/cron-jobs?', $http->calls[0]['url']);
+        self::assertSame(['time' => '0 0 * * *', 'command' => '/usr/bin/php /home/u1/public_html/x.php'], json_decode((string) $http->calls[0]['body'], true));
+    }
+
+    public function testCreateCronJobSurfacesTheRefusalFromHostinger(): void
+    {
+        $http = new FakeTransport([['status' => 422, 'body' => '{"message":"The time format is invalid."}']]);
+        $this->expectExceptionObject(ApiError::invalid('The time format is invalid.'));
+        (new HostingerSource($http, 't', ''))->createCronJob('u1', 'd.com', 7, '99 * * * *', 'x');
+    }
+
+    public function testDeleteAndOutputAddressTheJobByPwkey(): void
+    {
+        $http = new FakeTransport([['status' => 204], self::ok(['data' => ['output' => 'ERROR 500']])]);
+        $source = new HostingerSource($http, 't', '');
+        $source->deleteCronJob('u1', 'd.com', 7, 'EfMQFV8kc7');
+
+        self::assertSame('DELETE', $http->calls[0]['method']);
+        self::assertStringContainsString('/cron-jobs/EfMQFV8kc7?', $http->calls[0]['url']);
+        self::assertSame('ERROR 500', $source->cronJobOutput('u1', 'd.com', 7, 'EfMQFV8kc7'));
+        self::assertStringContainsString('/cron-jobs/EfMQFV8kc7/output?', $http->calls[1]['url']);
+    }
+
     public function testPhpVersionMergesAndSortsVersions(): void
     {
         $http = new FakeTransport([self::ok(['data' => [

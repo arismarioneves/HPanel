@@ -114,6 +114,42 @@ final class HostingerSource implements DataSource
         ];
     }
 
+    public function cronJobs(string $username, string $domain, int $orderId): array
+    {
+        $data = $this->json('GET', self::cronPath($username), self::scope($username, $domain, $orderId))['data'] ?? [];
+        $jobs = [];
+        foreach (is_array($data) ? $data : [] as $job) {
+            if (is_array($job) && is_string($job['pwkey'] ?? null) && is_string($job['time'] ?? null) && is_string($job['command'] ?? null)) {
+                $jobs[] = ['id' => $job['pwkey'], 'time' => $job['time'], 'command' => $job['command']];
+            }
+        }
+        return $jobs;
+    }
+
+    public function createCronJob(string $username, string $domain, int $orderId, string $time, string $command): void
+    {
+        $r = $this->raw('POST', self::cronPath($username), self::scope($username, $domain, $orderId), ['time' => $time, 'command' => $command]);
+        if ($r['status'] >= 200 && $r['status'] < 300) {
+            return;
+        }
+        // 4xx (exceto 401) é recusa da própria Hostinger (horário/comando inválido): a mensagem ajuda o usuário.
+        if ($r['status'] >= 400 && $r['status'] < 500 && $r['status'] !== 401) {
+            throw ApiError::invalid(self::reason($r['json']) ?? 'A Hostinger recusou essa tarefa cron. Confira o horário e o comando.');
+        }
+        $this->fail($r['status'], 'POST cron-jobs');
+    }
+
+    public function deleteCronJob(string $username, string $domain, int $orderId, string $id): void
+    {
+        $this->json('DELETE', self::cronPath($username) . '/' . rawurlencode($id), self::scope($username, $domain, $orderId));
+    }
+
+    public function cronJobOutput(string $username, string $domain, int $orderId, string $id): string
+    {
+        $path = self::cronPath($username) . '/' . rawurlencode($id) . '/output';
+        return (string) ($this->json('GET', $path, self::scope($username, $domain, $orderId))['data']['output'] ?? '');
+    }
+
     public function phpVersion(string $username, string $domain, int $orderId): array
     {
         $d = $this->json('GET', self::phpPath($username, $domain), self::scope($username, $domain, $orderId))['data'] ?? [];
@@ -299,6 +335,11 @@ final class HostingerSource implements DataSource
     private static function gitPath(string $username, string $domain): string
     {
         return self::accountPath($username) . '/vhosts/' . rawurlencode($domain) . '/git-repos';
+    }
+
+    private static function cronPath(string $username): string
+    {
+        return self::accountPath($username) . '/cron-jobs';
     }
 
     /** @return list<string> */

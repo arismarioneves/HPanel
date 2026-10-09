@@ -26,6 +26,7 @@ Painel para gerenciar todos os seus sites da Hostinger em um só lugar, sem nave
 - **📈 Uso** - Disco, inodes, RAM, CPU; respostas em cache na aba (exibe na hora e atualiza em segundo plano)
 - **📉 Gráficos de recursos** - CPU, memória, PHP workers, processos, I/O e IOPS em 1 h / 6 h / 24 h / 7 dias / 30 dias, com média, pico, limite do plano e marcação de quando o limite foi atingido
 - **🛡️ Antimalware** - Status do Monarx na visão geral do servidor (protegido, arquivos suspeitos, último scan)
+- **⏰ Cron jobs** - Aba própria em cada servidor: buscar, criar (script PHP ou comando), ver o resultado da última execução e excluir
 - **⏱️ Sessão** - Indicador no cabeçalho com a validade do token; renovação automática e em 1 clique
 - **🌓 Tema** - Claro, escuro ou seguir o sistema (em Configurações)
 
@@ -33,7 +34,7 @@ Painel para gerenciar todos os seus sites da Hostinger em um só lugar, sem nave
 
 ## 🧪 Modo demonstração
 
-O botão **Ver demonstração** na página inicial abre o painel completo com dados fictícios (`lib/demo/fixtures.json`, domínios `.example`). Nenhuma chamada é feita à Hostinger e ações que alteram algo (versão PHP, chave SSH) ficam indisponíveis. Para sair, use **Conectar sua conta** ou **Sair do demo**.
+O botão **Ver demonstração** na página inicial abre o painel completo com dados fictícios (`lib/demo/fixtures.json`, domínios `.example`). Nenhuma chamada é feita à Hostinger e ações que alteram algo (versão PHP, chave SSH, Git, cron jobs) ficam indisponíveis. Para sair, use **Conectar sua conta** ou **Sair do demo**.
 
 ## ⌨️ Busca Ctrl+K
 
@@ -50,6 +51,16 @@ Dentro da modal dá para:
 - Ver a **saída do último deploy**.
 - **Copiar o webhook** de auto deploy — ele fica mascarado por padrão. Trate o token como senha: quem o tiver dispara um deploy nesse site.
 - **Excluir** o repositório (os arquivos já publicados permanecem no servidor).
+
+## ⏰ Cron jobs
+
+Na Hostinger o cron é da **conta** (vale para todos os sites do servidor), por isso fica numa aba do servidor, não na lista de sites. A visão geral mostra quantas tarefas existem e leva direto para a aba.
+
+- **Criar**: **Script PHP** (caminho a partir de `/home/<usuário>/`, executado com `/usr/bin/php`) ou **Comando personalizado** (qualquer comando de uma linha, como `wget -O /dev/null https://site.com/cron.php`). A frequência vem de um preset ou dos 5 campos (minuto, hora, dia, mês, dia da semana), com a descrição em português ao lado.
+- **Resultado**: saída da última execução — útil para achar URLs que respondem erro 500 ou domínios que não resolvem mais.
+- **Buscar** por comando ou horário quando há muitas tarefas, e **excluir** com confirmação.
+
+A Hostinger não tem edição de tarefa: para mudar o horário ou o comando, crie a nova e exclua a antiga.
 
 ## ⭐ Favoritos
 
@@ -180,7 +191,7 @@ O JWT do hPanel usa **sessão deslizante**: enquanto ainda não expirou de vez, 
 HPanel/
 ├── index.php            # Landing (sem sessão) ou dashboard: Atenção, Favoritos, servidores
 ├── connect.php          # Conectar: colar o token JWT
-├── server.php           # Servidor em abas (visão geral, sites, bancos, ferramentas)
+├── server.php           # Servidor em abas (visão geral, sites, bancos, cron jobs, ferramentas)
 ├── settings.php         # Configurações (sessão, renovar, sair, tema)
 ├── config.exemplo.php   # Modelo de configuração local
 ├── .htaccess            # Bloqueia tudo que não é público
@@ -199,6 +210,7 @@ HPanel/
 │   │   ├── attention.js # Seção Atenção
 │   │   ├── swr.js       # Cache stale-while-revalidate (sessionStorage)
 │   │   ├── chart.js     # Gráficos SVG da visão geral (sem biblioteca)
+│   │   ├── cron.js      # Aba Cron jobs (+ cron-expr.js: presets, validação e descrição)
 │   │   ├── session-pill.js / session-status.js  # Validade do token
 │   │   ├── jwt.js       # Leitura/validação do token colado
 │   │   └── demo.js      # Botão "Ver demonstração"
@@ -241,6 +253,7 @@ O dashboard usa APIs internas do hPanel (não oficiais):
 - `/api/auth/api/external/v1/auth/refresh` - Renovação do JWT (sessão deslizante)
 - `/api/wh-api/api/hapi/v1/accounts/{username}/metrics/lve` - Séries de CPU, memória, I/O, IOPS, PHP workers e processos
 - `/api/wh-api/api/hapi/v1/accounts/{username}/malware/overview` - Status do antimalware
+- `/api/wh-api/api/hapi/v1/accounts/{username}/cron-jobs` - Cron jobs (GET/POST; `/{pwkey}` DELETE; `/{pwkey}/output` saída da última execução)
 - `/api/wh-api/api/hapi/v1/accounts/{username}/file-browser-link` - Gerenciador de arquivos (com `vhost` = pasta do site; sem = raiz da conta)
 
 ### Limitações

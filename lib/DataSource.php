@@ -34,6 +34,17 @@ interface DataSource
     /** @return array{protection:bool, status:?string, scanStatus:?string, lastScanEnd:?string, compromised:int, malicious:int} */
     public function malware(string $username, string $domain, int $orderId): array;
 
+    /** @return list<array{id:string, time:string, command:string}> id = pwkey da Hostinger */
+    public function cronJobs(string $username, string $domain, int $orderId): array;
+
+    /** `time` = expressão de 5 campos (`0 0 * * *`). */
+    public function createCronJob(string $username, string $domain, int $orderId, string $time, string $command): void;
+
+    public function deleteCronJob(string $username, string $domain, int $orderId, string $id): void;
+
+    /** Saída da última execução. */
+    public function cronJobOutput(string $username, string $domain, int $orderId, string $id): string;
+
     /** @return array{current:?string, currentFull:?string, versions:list<array{version:string,label:string}>} */
     public function phpVersion(string $username, string $domain, int $orderId): array;
 

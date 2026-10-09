@@ -13,10 +13,12 @@
     <a role="tab" href="#visao" data-tab="visao" aria-controls="panel-visao">Visão geral</a>
     <a role="tab" href="#sites" data-tab="sites" aria-controls="panel-sites">Sites</a>
     <a role="tab" href="#bancos" data-tab="bancos" aria-controls="panel-bancos">Bancos</a>
+    <a role="tab" href="#cron" data-tab="cron" aria-controls="panel-cron">Cron jobs</a>
     <a role="tab" href="#ferramentas" data-tab="ferramentas" aria-controls="panel-ferramentas">Ferramentas</a>
 </nav>
 
 <section id="panel-visao" role="tabpanel" hidden></section>
 <section id="panel-sites" role="tabpanel" hidden></section>
 <section id="panel-bancos" role="tabpanel" hidden></section>
+<section id="panel-cron" role="tabpanel" hidden></section>
 <section id="panel-ferramentas" role="tabpanel" hidden></section>

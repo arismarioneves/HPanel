@@ -658,5 +658,40 @@
       "compromised": 0,
       "malicious": 0
     }
+  },
+  "cronJobs": {
+    "900001": [
+      {
+        "id": "DemoCron01",
+        "time": "*/5 * * * *",
+        "command": "/usr/bin/php /home/u900001/domains/aurora.example/public_html/wp-cron.php"
+      },
+      {
+        "id": "DemoCron02",
+        "time": "0 3 * * *",
+        "command": "wget -O /dev/null https://aurora.example/backup/run"
+      },
+      {
+        "id": "DemoCron03",
+        "time": "30 6 * * 1",
+        "command": "/usr/bin/php /home/u900001/domains/loja-aurora.example/public_html/relatorio-semanal.php --enviar-email"
+      },
+      {
+        "id": "DemoCron04",
+        "time": "0 0,12 * * *",
+        "command": "wget -O /dev/null https://blog.aurora.example/autocron/index.php"
+      }
+    ],
+    "900002": [
+      {
+        "id": "DemoCron05",
+        "time": "* * * * *",
+        "command": "/usr/bin/php /home/u900002/domains/pet-feliz.example/public_html/artisan schedule:run"
+      }
+    ]
+  },
+  "cronOutput": {
+    "DemoCron02": "--2026-10-09 03:00:01--  https://aurora.example/backup/run\nResolving aurora.example (aurora.example)... 203.0.113.11\nConnecting to aurora.example (aurora.example)|203.0.113.11|:443... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 2 [text/html]\nSaving to: '/dev/null'\n\n2026-10-09 03:00:02 (1.21 MB/s) - '/dev/null' saved [2/2]",
+    "DemoCron04": "--2026-10-09 12:00:04--  https://blog.aurora.example/autocron/index.php\nConnecting to blog.aurora.example (blog.aurora.example)|203.0.113.11|:443... connected.\nHTTP request sent, awaiting response... 500 Internal Server Error\n2026-10-09 12:00:05 ERROR 500: Internal Server Error."
   }
 }

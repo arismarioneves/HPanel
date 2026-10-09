@@ -89,6 +89,34 @@ final class Validate
         throw ApiError::invalid('Versão PHP inválida.');
     }
 
+    /** Expressão de 5 campos (minuto hora dia mês dia-da-semana) com números, `*`, `,`, `-` e `/`. */
+    public static function cronTime(mixed $v): string
+    {
+        $t = is_string($v) ? trim(preg_replace('/\s+/', ' ', $v) ?? '') : '';
+        if (strlen($t) <= 100 && preg_match('#^[0-9*,/-]+( [0-9*,/-]+){4}$#D', $t) === 1) {
+            return $t;
+        }
+        throw ApiError::invalid('Horário inválido. Use 5 campos, como "0 0 * * *" (minuto hora dia mês dia-da-semana).');
+    }
+
+    /** Comando de uma linha só (a Hostinger grava no crontab da conta). */
+    public static function cronCommand(mixed $v): string
+    {
+        $c = is_string($v) ? trim($v) : '';
+        if ($c !== '' && strlen($c) <= 1000 && preg_match('/[\x00-\x1F\x7F]/', $c) === 0) {
+            return $c;
+        }
+        throw ApiError::invalid('Comando inválido. Informe um comando de uma linha só (até 1000 caracteres).');
+    }
+
+    public static function cronId(mixed $v): string
+    {
+        if (is_string($v) && preg_match('/^[A-Za-z0-9_-]{1,64}$/D', $v) === 1) {
+            return $v;
+        }
+        throw ApiError::invalid('Tarefa cron inválida.');
+    }
+
     public static function jwt(mixed $v): string
     {
         $t = is_string($v) ? trim($v) : '';

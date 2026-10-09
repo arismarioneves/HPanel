@@ -75,6 +75,17 @@ final class DemoSourceTest extends TestCase
         self::assertGreaterThan(0, $demo->malware('u900002', 'pet-feliz.example', 900002)['compromised']);
     }
 
+    public function testDemoCronJobsHaveIdsAndOutputs(): void
+    {
+        $demo = new DemoSource();
+        $jobs = $demo->cronJobs('u900001', 'aurora.example', 900001);
+        self::assertCount(4, $jobs);
+        self::assertSame(['id', 'time', 'command'], array_keys($jobs[0]));
+        self::assertStringContainsString('ERROR 500', $demo->cronJobOutput('u900001', 'aurora.example', 900001, 'DemoCron04'));
+        self::assertSame('', $demo->cronJobOutput('u900001', 'aurora.example', 900001, 'DemoCron01'));
+        self::assertSame([], $demo->cronJobs('u900004', 'cafe.example', 900004));
+    }
+
     public function testUnknownServerIsNotFound(): void
     {
         $this->expectExceptionObject(ApiError::notFound('Servidor não encontrado nesta conta.'));
@@ -93,6 +104,8 @@ final class DemoSourceTest extends TestCase
         yield 'create repo' => [static fn(DemoSource $d) => $d->createGitRepo('u900001', 'aurora.example', 900001, 'git@github.com:a/b.git', 'main', '')];
         yield 'delete repo' => [static fn(DemoSource $d) => $d->deleteGitRepo('u900001', 'aurora.example', 900001, 611001)];
         yield 'deploy repo' => [static fn(DemoSource $d) => $d->deployGitRepo('u900001', 'aurora.example', 900001, 611001)];
+        yield 'create cron' => [static fn(DemoSource $d) => $d->createCronJob('u900001', 'aurora.example', 900001, '0 0 * * *', 'echo oi')];
+        yield 'delete cron' => [static fn(DemoSource $d) => $d->deleteCronJob('u900001', 'aurora.example', 900001, 'DemoCron01')];
     }
 
     /** @dataProvider blocked */

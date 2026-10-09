@@ -10,10 +10,11 @@ import { formatDate, formatMb, formatNumber, level, percent, relTime } from '../
 import { areaChart, donut } from '../chart.js';
 import { groupSites } from '../sites.js';
 import { openGitModal } from '../git.js';
+import { renderCron } from '../cron.js';
 import * as favs from '../favorites.js';
 
 const { orderId } = boot();
-const TABS = ['visao', 'sites', 'bancos', 'ferramentas'];
+const TABS = ['visao', 'sites', 'bancos', 'cron', 'ferramentas'];
 const rendered = new Set();
 let detail = null;
 let loadError = null;
@@ -131,7 +132,8 @@ const METRIC_HINT = {
 function renderVisao(p) {
   const a = detail.account;
   const malware = statusChip('Antimalware', null, 'muted', 'Carregando…');
-  const status = h('div', { class: 'status-strip' }, malware);
+  const cron = cronChip(null);
+  const status = h('div', { class: 'status-strip' }, malware, cron);
   const resources = h('div', { class: 'chart-grid' }, Array.from({ length: 6 }, () => h('div', { class: 'skeleton skeleton-chart' })));
 
   p.append(
@@ -150,6 +152,7 @@ function renderVisao(p) {
   }
   loadMetrics(resources);
   loadMalware(malware);
+  loadCronCount();
   refreshExtras = false;
 }
 
@@ -268,6 +271,26 @@ function malwareChip(m) {
   if (infected > 0) return statusChip('Antimalware', last, 'danger', `${infected} arquivo${infected > 1 ? 's' : ''} suspeito${infected > 1 ? 's' : ''}`);
   if (!m.protection) return statusChip('Antimalware', last, 'warn', 'Proteção desativada');
   return statusChip('Antimalware', last, 'ok', `Protegido${scanning}`);
+}
+
+/* Chip "Cron jobs" da visão geral: mostra a contagem e leva à aba de gestão. */
+function cronChip(count) {
+  return h('button', {
+    type: 'button', class: 'status-chip status-link', 'data-tip': 'Gerenciar tarefas cron', 'data-cron-chip': '',
+    on: { click: () => { location.hash = 'cron'; } },
+  }, icon('clock'), h('span', { class: 'muted' }, 'Cron jobs'), h('strong', {}, count == null ? '…' : String(count)));
+}
+
+function updateCronChip(jobs) {
+  document.querySelector('[data-cron-chip]')?.replaceWith(cronChip(jobs.length));
+}
+
+async function loadCronCount() {
+  try {
+    await cached('cron-jobs', { orderId }, (data) => updateCronChip(data.jobs), { maxAgeMs: 60000, refresh: refreshExtras });
+  } catch {
+    document.querySelector('[data-cron-chip] strong')?.replaceChildren('—');
+  }
 }
 
 /* ===== Sites ===== */
@@ -512,6 +535,7 @@ const RENDER = {
   visao: renderVisao,
   sites: renderSites,
   bancos: renderBancos,
+  cron: (p) => renderCron(p, { orderId, refresh: refreshExtras, onJobs: updateCronChip }),
   ferramentas: renderFerramentas,
 };
 

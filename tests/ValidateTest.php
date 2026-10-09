@@ -131,6 +131,38 @@ final class ValidateTest extends TestCase
         Validate::repoId('0');
     }
 
+    public function testCronTimeNormalizesSpacingAndAcceptsSteps(): void
+    {
+        self::assertSame('*/5 * * * *', Validate::cronTime(" */5  *\t* * * "));
+        self::assertSame('0 0,12 1-15 * 1-5', Validate::cronTime('0 0,12 1-15 * 1-5'));
+    }
+
+    #[DataProvider('badCron')]
+    public function testCronInputsRejectGarbage(string $method, mixed $v): void
+    {
+        $this->expectException(ApiError::class);
+        Validate::$method($v);
+    }
+
+    public static function badCron(): array
+    {
+        return [
+            ['cronTime', '0 0 * *'],
+            ['cronTime', '0 0 * * * *'],
+            ['cronTime', '@daily'],
+            ['cronTime', '0 0 * * *; rm -rf ~'],
+            ['cronTime', null],
+            ['cronCommand', ''],
+            ['cronCommand', '   '],
+            ['cronCommand', "wget https://a.com\nrm -rf ~"],
+            ['cronCommand', str_repeat('a', 1001)],
+            ['cronCommand', ['x']],
+            ['cronId', '../x'],
+            ['cronId', ''],
+            ['cronId', 7],
+        ];
+    }
+
     public function testJwtTrimsAndRejectsNonTokens(): void
     {
         $t = TestJwt::make(2000000000);
