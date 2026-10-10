@@ -14,10 +14,10 @@ use HPanel\View;
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
-    <link rel="preload" href="assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="assets/css/app.css">
-    <script src="assets/js/theme-init.js"></script>
-    <script type="module" src="assets/js/pages/<?= View::e($page) ?>.js"></script>
+    <link rel="preload" href="<?= View::e(View::asset('fonts/inter-latin-var.woff2')) ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= View::e(View::asset('css/app.css')) ?>">
+    <script src="<?= View::e(View::asset('js/theme-init.js')) ?>"></script>
+    <script type="module" src="<?= View::e(View::asset('js/pages/' . $page . '.js')) ?>"></script>
 </head>
 <body data-page="<?= View::e($page) ?>">
     <a class="skip-link" href="#main">Pular para o conteúdo</a>

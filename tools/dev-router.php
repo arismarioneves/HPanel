@@ -28,6 +28,22 @@ if ($path === '/') {
     require $root . '/index.php';
     return true;
 }
+// Assets versionados (assets/v/<versão>/…): mesmo arquivo de assets/…, como no .htaccess.
+if (preg_match('#^/assets/v/[0-9a-f]+/(.+)$#', $path, $m) === 1) {
+    $assets = realpath($root . '/assets') . DIRECTORY_SEPARATOR;
+    $file = realpath($assets . $m[1]);
+    if ($file === false || !str_starts_with($file, $assets) || !is_file($file)) {
+        http_response_code(404);
+        exit('Not found');
+    }
+    $types = [
+        'js' => 'text/javascript; charset=utf-8', 'css' => 'text/css; charset=utf-8', 'svg' => 'image/svg+xml',
+        'woff2' => 'font/woff2', 'webp' => 'image/webp', 'png' => 'image/png', 'txt' => 'text/plain; charset=utf-8',
+    ];
+    header('Content-Type: ' . ($types[strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? 'application/octet-stream'));
+    readfile($file);
+    return true;
+}
 if (is_file($root . $path)) {
     return false;
 }

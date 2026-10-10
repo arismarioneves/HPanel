@@ -46,6 +46,7 @@ HPanel é um painel leve para gerenciar vários servidores e sites da Hostinger 
 - **Endpoints**: envelope `{ok, data}` / `{ok:false, code, message}`; mutações só `POST` (CSRF: header `X-HPanel: 1` + mesma origem); `GET` nunca altera estado. Erro da Hostinger vira `upstream_unavailable` ou `session_expired`, sem repassar corpo.
 - **URLs sem `.php`**: links e chamadas usam `connect`, `server?orderId=…`, `api/<nome>` (o `api.js` já monta assim).
 - **Front**: DOM só via `h()` de `assets/js/h.js` (escapa texto); nada de `innerHTML` com dado externo, script/estilo inline ou handler inline (CSP restrita). Ícones no sprite `assets/icons.svg`. Leituras com cache usam `cached()` de `api.js` (stale-while-revalidate em `sessionStorage`).
+- **Assets**: PHP referencia arquivos de `assets/` só via `View::asset()` (gera `assets/v/<versão>/…`, que muda a cada deploy que altera um asset). Em JS, `import` e outros caminhos de asset são sempre relativos ao módulo (`./x.js`, `new URL('../icons.svg', import.meta.url)`), nunca absolutos, para herdar a versão — senão um navegador com cache antigo mistura módulos de deploys diferentes.
 - **Testes**: comportamento observável (parsing, validação, fronteiras, demo bloqueado). Não testar texto de implementação nem fiação.
 - **Docs**: recurso visível ao usuário atualiza o `README.md` (lista de funcionalidades e “APIs Utilizadas”).
 - **Commits**: mensagem curta em português, sem acentos, um recurso por commit.

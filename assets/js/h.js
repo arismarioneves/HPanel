@@ -1,4 +1,6 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
+// Relativo a este módulo, o sprite fica no mesmo caminho versionado (assets/v/<versão>/icons.svg).
+const SPRITE = new URL('../icons.svg', import.meta.url).href;
 
 /**
  * Cria elementos sem HTML: strings viram text nodes.
@@ -27,7 +29,7 @@ export function icon(name, cls = 'i') {
   svg.setAttribute('class', cls);
   svg.setAttribute('aria-hidden', 'true');
   const use = document.createElementNS(SVG_NS, 'use');
-  use.setAttribute('href', `assets/icons.svg#${name}`);
+  use.setAttribute('href', `${SPRITE}#${name}`);
   svg.append(use);
   return svg;
 }

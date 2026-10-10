@@ -112,12 +112,13 @@ cp config.exemplo.php config.php
 
 ### Nginx
 
-No Apache o `.htaccess` já bloqueia tudo que não é público e serve as páginas e a API sem `.php` na URL (`/connect`, `/server?orderId=…`, `/api/session`); um endereço com `.php` digitado recebe 301 para a forma sem extensão. No Nginx, use o bloco equivalente (instalação na **raiz** do domínio, `base => '/'`):
+No Apache o `.htaccess` já bloqueia tudo que não é público, serve as páginas e a API sem `.php` na URL (`/connect`, `/server?orderId=…`, `/api/session`) e entrega os assets versionados (`/assets/v/<versão>/…` → `/assets/…`, para que um deploy novo nunca misture JS/CSS novo com antigo do cache); um endereço com `.php` digitado recebe 301 para a forma sem extensão. No Nginx, use o bloco equivalente (instalação na **raiz** do domínio, `base => '/'`):
 
 ```nginx
 location ~ ^/(storage|lib|partials|tests|tools|vendor|docs)(/|$) { deny all; }
 location ~ ^/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ { deny all; }
 location ~ /\. { deny all; }
+location ~ ^/assets/v/[0-9a-f]+/(.+)$ { try_files /assets/$1 =404; }
 location / { try_files $uri $uri/ $uri.php?$query_string; }
 ```
 
@@ -127,6 +128,7 @@ Em **subpasta**, prefixe as regras com o mesmo caminho de `base`. Exemplo para `
 location ~ ^/hpanel/(storage|lib|partials|tests|tools|vendor|docs)(/|$) { deny all; }
 location ~ ^/hpanel/(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ { deny all; }
 location ~ /\. { deny all; }
+location ~ ^/hpanel/assets/v/[0-9a-f]+/(.+)$ { try_files /hpanel/assets/$1 =404; }
 location /hpanel/ { try_files $uri $uri/ $uri.php?$query_string; }
 ```
 

@@ -9,6 +9,9 @@ Options -Indexes
     RewriteRule ^(storage|lib|partials|tests|tools|vendor|docs)(/|$) - [F,L]
     RewriteRule ^(config(\.exemplo)?\.php|composer\.(json|lock)|package\.json|phpunit\.xml)$ - [F,L]
 
+    # Assets versionados (assets/v/<versão>/…, gerados por View::asset) são os arquivos de assets/…
+    RewriteRule ^assets/v/[0-9a-f]+/(.+)$ assets/$1 [L]
+
     # URL com .php digitada ou antiga: 301 para a forma sem extensão (index.php vira a pasta).
     # Só GET/HEAD: um POST redirecionado perderia o corpo. THE_REQUEST é a linha original,
     # então a reescrita interna abaixo não volta a cair aqui.

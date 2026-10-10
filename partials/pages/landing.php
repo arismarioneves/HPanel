@@ -8,7 +8,7 @@
             <button type="button" class="btn btn-secondary" data-action="demo"><?= View::icon('server') ?>Ver demonstração</button>
         </div>
     </div>
-    <img class="hero-shot" src="assets/img/dashboard-preview.webp" width="1920" height="1230" loading="eager"
+    <img class="hero-shot" src="<?= View::e(View::asset('img/dashboard-preview.webp')) ?>" width="1920" height="1230" loading="eager"
          alt="Painel do HPanel no tema escuro: cards de servidores com uso de disco e inodes e os sites de cada plano.">
 </section>
 
